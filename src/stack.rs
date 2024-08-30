@@ -2,6 +2,7 @@ use std::iter::once;
 
 use crate::{
     fragment::{Destructor, ProgramFragment},
+    output_writer::Output,
     varnames::VarNames,
     TemplateToken,
 };
@@ -23,6 +24,13 @@ pub struct Stack {
     var_names: VarNames,
 }
 
+const DEFAULT_OUTPUT_HANDLER: &'static [TemplateToken] = &[
+    TemplateToken::str("console.log("),
+    TemplateToken::InVar(0),
+    TemplateToken::str(");"),
+    TemplateToken::String(Output::NewLine),
+];
+
 impl Stack {
     pub fn new() -> Stack {
         Stack {
@@ -31,11 +39,7 @@ impl Stack {
             current_group: StackBracketGroup {
                 brackent_end_fragment: ProgramFragment::default(),
                 local_variables: vec![],
-                output_handler: Some(&[
-                    TemplateToken::String("console.log("),
-                    TemplateToken::InVar(0),
-                    TemplateToken::String(")"),
-                ]),
+                output_handler: Some(DEFAULT_OUTPUT_HANDLER),
                 destructors: vec![],
                 stack: vec![],
             },

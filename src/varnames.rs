@@ -1,5 +1,4 @@
-#[derive(Default)]
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct VarNames(usize);
 
 impl Iterator for VarNames {

@@ -1,5 +1,6 @@
 use crate::{
-    stack::{self, Stack, StackBracketGroup},
+    output_writer::{Output, OutputWriter},
+    stack::{Stack, StackBracketGroup},
     TemplateToken,
 };
 use std::{io::Write, iter::once};
@@ -13,7 +14,7 @@ pub struct ProgramFragment {
 }
 
 pub fn write_fragment(
-    output: &mut impl Write,
+    output: &mut OutputWriter<impl Write>,
     fragment: ProgramFragment,
     stack: &mut Stack,
     local_vars: &[String],
@@ -52,7 +53,7 @@ pub struct Destructor {
 }
 
 pub fn write_output_handler(
-    output: &mut impl Write,
+    output: &mut OutputWriter<impl Write>,
     handler: &mut impl Iterator<Item = &'static [TemplateToken]>,
     input_vars: &[String],
     local_vars: &[String],
@@ -60,14 +61,12 @@ pub fn write_output_handler(
     let value = handler.next().unwrap();
     for token in value {
         match token {
-            TemplateToken::InVar(k) => write!(
-                output,
-                "{}",
-                input_vars.get(*k).map(|d| d.as_str()).unwrap_or("")
-            )?,
+            TemplateToken::InVar(k) => output.write(Output::String(
+                input_vars.get(*k).map(|d| d.as_str()).unwrap_or(""),
+            ))?,
             TemplateToken::OutVar(_) => panic!("Output handlers can not produce output {value:?}"),
-            TemplateToken::String(s) => write!(output, "{}", *s)?,
-            TemplateToken::LocalVar(k) => write!(output, "{}", local_vars[*k])?,
+            TemplateToken::String(s) => output.write(s.clone())?,
+            TemplateToken::LocalVar(n) => output.write(Output::String(local_vars[*n].as_str()))?,
             TemplateToken::PreviousOuput => {
                 write_output_handler(output, handler, input_vars, local_vars)?
             }
@@ -78,7 +77,7 @@ pub fn write_output_handler(
 }
 
 pub fn dispose_bracket_handler(
-    output: &mut impl Write,
+    output: &mut OutputWriter<impl Write>,
     bracket_handler: StackBracketGroup,
     stack: &mut Stack,
 ) -> std::io::Result<()> {
@@ -112,25 +111,20 @@ pub fn dispose_bracket_handler(
 }
 
 pub fn write_tokens(
-    output: &mut impl Write,
+    output: &mut OutputWriter<impl Write>,
     tokens: &[TemplateToken],
     local_vars: &[String],
     in_vars: &[String],
     out_vars: &[String],
 ) -> std::io::Result<()> {
     for token in tokens {
-        write!(
-            output,
-            "{}",
-            match token {
-                TemplateToken::InVar(n) => in_vars[*n].as_str(),
-                TemplateToken::OutVar(n) => out_vars[*n].as_str(),
-                TemplateToken::String(val) => val,
-                TemplateToken::LocalVar(n) => local_vars[*n].as_str(),
-                TemplateToken::PreviousOuput =>
-                    panic!("Use of previous output outside output handler"),
-            }
-        )?
+        match token {
+            TemplateToken::InVar(n) => output.write(Output::String(in_vars[*n].as_str()))?,
+            TemplateToken::OutVar(n) => output.write(Output::String(out_vars[*n].as_str()))?,
+            TemplateToken::String(val) => output.write(val.clone())?,
+            TemplateToken::LocalVar(n) => output.write(Output::String(local_vars[*n].as_str()))?,
+            TemplateToken::PreviousOuput => panic!("Use of previous output outside output handler"),
+        }
     }
 
     Ok(())

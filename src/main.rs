@@ -1,20 +1,27 @@
-use std::{collections::HashMap, io::Write};
+use std::io::Write;
 
-use fragment::{dispose_bracket_handler, Destructor, ProgramFragment};
-use stack::{Stack, StackBracketGroup};
-use varnames::VarNames;
+use fragment::{dispose_bracket_handler, ProgramFragment};
+use stack::Stack;
 
 mod fragment;
+mod output_writer;
 mod stack;
 mod varnames;
+use output_writer::{Output, OutputWriter};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum TemplateToken {
     InVar(usize),
     OutVar(usize),
-    String(&'static str),
+    String(Output<'static>),
     LocalVar(usize),
     PreviousOuput,
+}
+
+impl TemplateToken {
+    const fn str(value: &'static str) -> TemplateToken {
+        TemplateToken::String(Output::str(value))
+    }
 }
 
 #[derive(Default)]
@@ -36,9 +43,10 @@ const BUILTINS: &'static [Builtin] = &[
         token: '[',
         template: ProgramFragment {
             init_tokens: &[
-                TemplateToken::String("let "),
+                TemplateToken::str("let "),
                 TemplateToken::LocalVar(0),
-                TemplateToken::String("= [];\n"),
+                TemplateToken::str("= [];"),
+                TemplateToken::String(Output::NewLine),
             ],
             destruct_tokens: &[],
             arguments_popped: 0,
@@ -47,17 +55,19 @@ const BUILTINS: &'static [Builtin] = &[
         brachet_handlers: &[BracketHandler {
             output_handler: Some(&[
                 TemplateToken::LocalVar(0),
-                TemplateToken::String(".push("),
+                TemplateToken::str(".push("),
                 TemplateToken::InVar(0),
-                TemplateToken::String(");\n"),
+                TemplateToken::str(");"),
+                TemplateToken::String(Output::NewLine),
             ]),
             fragment: ProgramFragment {
                 init_tokens: &[
-                    TemplateToken::String("const "),
+                    TemplateToken::str("const "),
                     TemplateToken::OutVar(0),
-                    TemplateToken::String("="),
+                    TemplateToken::str("="),
                     TemplateToken::LocalVar(0),
-                    TemplateToken::String(";\n"),
+                    TemplateToken::str(";"),
+                    TemplateToken::String(Output::NewLine),
                 ],
                 destruct_tokens: &[],
                 arguments_popped: 0,
@@ -69,17 +79,23 @@ const BUILTINS: &'static [Builtin] = &[
         token: 'r',
         template: ProgramFragment {
             init_tokens: &[
-                TemplateToken::String("for (let "),
+                TemplateToken::str("for (let "),
                 TemplateToken::OutVar(0),
-                TemplateToken::String("=0; "),
+                TemplateToken::str("=0; "),
                 TemplateToken::OutVar(0),
-                TemplateToken::String("<("),
+                TemplateToken::str("<("),
                 TemplateToken::InVar(0),
-                TemplateToken::String("); "),
+                TemplateToken::str("); "),
                 TemplateToken::OutVar(0),
-                TemplateToken::String("++)\n {"),
+                TemplateToken::str("++) {"),
+                TemplateToken::String(Output::Indent),
+                TemplateToken::String(Output::NewLine),
             ],
-            destruct_tokens: &[TemplateToken::String("}\n")],
+            destruct_tokens: &[
+                TemplateToken::String(Output::Dedent),
+                TemplateToken::str("}"),
+                TemplateToken::String(Output::NewLine),
+            ],
             arguments_popped: 1,
             arguments_pushed: 1,
         },
@@ -90,13 +106,14 @@ const BUILTINS: &'static [Builtin] = &[
         token: '+',
         template: ProgramFragment {
             init_tokens: &[
-                TemplateToken::String("let "),
+                TemplateToken::str("let "),
                 TemplateToken::OutVar(0),
-                TemplateToken::String(" = ("),
+                TemplateToken::str(" = ("),
                 TemplateToken::InVar(0),
-                TemplateToken::String(") + ("),
+                TemplateToken::str(") + ("),
                 TemplateToken::InVar(1),
-                TemplateToken::String(");\n"),
+                TemplateToken::str(");"),
+                TemplateToken::String(Output::NewLine),
             ],
             destruct_tokens: &[],
             arguments_popped: 2,
@@ -109,9 +126,10 @@ const BUILTINS: &'static [Builtin] = &[
         token: '1',
         template: ProgramFragment {
             init_tokens: &[
-                TemplateToken::String("const "),
+                TemplateToken::str("const "),
                 TemplateToken::OutVar(0),
-                TemplateToken::String("= 1;\n"),
+                TemplateToken::str("= 1;"),
+                TemplateToken::String(Output::NewLine),
             ],
             destruct_tokens: &[],
             arguments_pushed: 1,
@@ -124,7 +142,7 @@ const BUILTINS: &'static [Builtin] = &[
 
 fn transpile_program(
     iter: &mut impl Iterator<Item = char>,
-    output: &mut impl Write,
+    output: &mut OutputWriter<impl Write>,
 ) -> std::io::Result<()> {
     let mut stack = Stack::new();
 
@@ -165,6 +183,8 @@ fn main() {
     let program = "11+r[1+1+r]";
 
     let mut chars = program.chars();
-    transpile_program(&mut chars, &mut std::io::stdout()).unwrap();
+
+    let mut writer = OutputWriter::new(std::io::stdout());
+    transpile_program(&mut chars, &mut writer).unwrap();
     println!();
 }

@@ -5,7 +5,7 @@ use crate::{
 };
 use std::{io::Write, iter::once};
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct ProgramFragment {
     pub init_tokens: &'static [TemplateToken],
     pub destruct_tokens: &'static [TemplateToken],
@@ -44,7 +44,7 @@ pub fn write_fragment(
     Ok(())
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Destructor {
     pub fragments: &'static [TemplateToken],
     pub local_vars: Vec<String>,

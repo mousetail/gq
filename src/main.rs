@@ -15,6 +15,7 @@ enum TemplateToken {
     OutVar(usize),
     String(Output<'static>),
     LocalVar(usize),
+    #[allow(unused)]
     PreviousOuput,
 }
 
@@ -38,6 +39,72 @@ struct BracketHandler {
 }
 
 const BUILTINS: &'static [Builtin] = &[
+    Builtin {
+        local_vars: 2,
+        token: ',',
+        template: ProgramFragment {
+            init_tokens: &[
+                TemplateToken::str("const "),
+                TemplateToken::LocalVar(0),
+                TemplateToken::str("= ()=>{"),
+                TemplateToken::String(Output::NewLine),
+                TemplateToken::String(Output::Indent),
+            ],
+            destruct_tokens: &[],
+            arguments_popped: 0,
+            arguments_pushed: 0,
+        },
+        brachet_handlers: &[
+            BracketHandler {
+                output_handler: Some(&[
+                    TemplateToken::LocalVar(1),
+                    TemplateToken::str("("),
+                    TemplateToken::InVar(0),
+                    TemplateToken::str(");"),
+                    TemplateToken::String(Output::NewLine),
+                ]),
+                fragment: ProgramFragment {
+                    arguments_popped: 0,
+                    arguments_pushed: 0,
+                    init_tokens: &[],
+                    destruct_tokens: &[],
+                },
+            },
+            BracketHandler {
+                output_handler: Some(&[
+                    TemplateToken::LocalVar(1),
+                    TemplateToken::str("("),
+                    TemplateToken::InVar(0),
+                    TemplateToken::str(");"),
+                    TemplateToken::String(Output::NewLine),
+                ]),
+                fragment: ProgramFragment {
+                    arguments_popped: 0,
+                    arguments_pushed: 1,
+                    init_tokens: &[
+                        TemplateToken::String(Output::Dedent),
+                        TemplateToken::str("};"),
+                        TemplateToken::String(Output::NewLine),
+                        TemplateToken::str("const "),
+                        TemplateToken::LocalVar(1),
+                        TemplateToken::str(" = ("),
+                        TemplateToken::OutVar(0),
+                        TemplateToken::str(") => {"),
+                        TemplateToken::String(Output::Indent),
+                        TemplateToken::String(Output::NewLine),
+                    ],
+                    destruct_tokens: &[
+                        TemplateToken::String(Output::Dedent),
+                        TemplateToken::str("};"),
+                        TemplateToken::String(Output::NewLine),
+                        TemplateToken::LocalVar(0),
+                        TemplateToken::str("();"),
+                        TemplateToken::String(Output::NewLine),
+                    ],
+                },
+            },
+        ],
+    },
     Builtin {
         local_vars: 1,
         token: '[',
@@ -165,7 +232,7 @@ fn transpile_program(
 
         fragment::write_fragment(output, builtin.template, &mut stack, &local_vars)?;
 
-        for bracket_handler in builtin.brachet_handlers {
+        for bracket_handler in builtin.brachet_handlers.iter().rev() {
             stack.push_group(
                 local_vars.clone(),
                 bracket_handler.fragment,
@@ -180,7 +247,7 @@ fn transpile_program(
 }
 
 fn main() {
-    let program = "11+r[1+1+r]";
+    let program = "11+r,1+1+r]1]";
 
     let mut chars = program.chars();
 

@@ -7,7 +7,7 @@ use crate::{
     TemplateToken,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StackBracketGroup {
     pub brackent_end_fragment: ProgramFragment,
     pub local_variables: Vec<String>,
@@ -17,7 +17,7 @@ pub struct StackBracketGroup {
     pub stack: Vec<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Stack {
     frames: Vec<StackBracketGroup>,
     pub current_group: StackBracketGroup,
@@ -73,6 +73,8 @@ impl Stack {
         end_fragment: ProgramFragment,
         output_handler: Option<&'static [TemplateToken]>,
     ) {
+        print!("// pushed {}", self.frames.len());
+
         self.frames.push(std::mem::replace(
             &mut self.current_group,
             StackBracketGroup {
@@ -86,6 +88,7 @@ impl Stack {
     }
 
     pub fn pop_group(&mut self) -> StackBracketGroup {
+        print!("// popped {}", self.frames.len());
         std::mem::replace(&mut self.current_group, self.frames.pop().unwrap())
     }
 

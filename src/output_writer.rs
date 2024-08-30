@@ -32,7 +32,7 @@ impl<W: Write> OutputWriter<W> {
     pub fn write(&mut self, token: Output) -> std::io::Result<()> {
         match token {
             Output::String(s) => {
-                if (self.last_token_was_newline) {
+                if self.last_token_was_newline {
                     write!(self.writer, "\n{:1$}", "", self.indent * 4)?;
                     self.last_token_was_newline = false;
                 }

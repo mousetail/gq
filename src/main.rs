@@ -1,155 +1,170 @@
 use std::{collections::HashMap, io::Write};
 
+use fragment::{dispose_bracket_handler, Destructor, ProgramFragment};
+use stack::{Stack, StackBracketGroup};
 use varnames::VarNames;
 
+mod fragment;
+mod stack;
 mod varnames;
 
+#[derive(Clone, Copy, Debug)]
 enum TemplateToken {
-    ArgumentStart,
-    ArgumentEnd,
-    ArgumentVar(usize),
+    InVar(usize),
+    OutVar(usize),
     String(&'static str),
-    ArgumentOut,
+    LocalVar(usize),
+    PreviousOuput,
 }
 
+#[derive(Default)]
 struct Builtin {
+    local_vars: usize,
     token: char,
-    args: usize,
-    template_before: &'static [TemplateToken],
-    template_after: &'static [TemplateToken]
+    template: ProgramFragment,
+    brachet_handlers: &'static [BracketHandler],
+}
+
+struct BracketHandler {
+    fragment: ProgramFragment,
+    output_handler: Option<&'static [TemplateToken]>,
 }
 
 const BUILTINS: &'static [Builtin] = &[
     Builtin {
-        token: ']',
-        args: 1,
-        template_before: &[
-            TemplateToken::String("let "),
-            TemplateToken::ArgumentOut,
-            TemplateToken::String("= [];"),
-            TemplateToken::ArgumentStart,
-            TemplateToken::ArgumentOut,
-            TemplateToken::String(".push("),
-            TemplateToken::ArgumentVar(0),
-            TemplateToken::String(");\n"),
-            TemplateToken::ArgumentEnd
-        ],
-        template_after: &[
-        ],
+        local_vars: 1,
+        token: '[',
+        template: ProgramFragment {
+            init_tokens: &[
+                TemplateToken::String("let "),
+                TemplateToken::LocalVar(0),
+                TemplateToken::String("= [];\n"),
+            ],
+            destruct_tokens: &[],
+            arguments_popped: 0,
+            arguments_pushed: 0,
+        },
+        brachet_handlers: &[BracketHandler {
+            output_handler: Some(&[
+                TemplateToken::LocalVar(0),
+                TemplateToken::String(".push("),
+                TemplateToken::InVar(0),
+                TemplateToken::String(");\n"),
+            ]),
+            fragment: ProgramFragment {
+                init_tokens: &[
+                    TemplateToken::String("const "),
+                    TemplateToken::OutVar(0),
+                    TemplateToken::String("="),
+                    TemplateToken::LocalVar(0),
+                    TemplateToken::String(";\n"),
+                ],
+                destruct_tokens: &[],
+                arguments_popped: 0,
+                arguments_pushed: 1,
+            },
+        }],
     },
     Builtin {
         token: 'r',
-        args: 1,
-        template_before:&[
-            TemplateToken::ArgumentStart,
-            TemplateToken::String("for (let "),
-            TemplateToken::ArgumentOut,
-            TemplateToken::String("=0; "),
-            TemplateToken::ArgumentOut,
-            TemplateToken::String("<("),
-            TemplateToken::ArgumentVar(0),
-            TemplateToken::String("); "),
-            TemplateToken::ArgumentOut,
-            TemplateToken::String("++)\n {"),
-        ],
-        template_after: &[
-            TemplateToken::String("}\n"),
-            TemplateToken::ArgumentEnd,
-        ],
+        template: ProgramFragment {
+            init_tokens: &[
+                TemplateToken::String("for (let "),
+                TemplateToken::OutVar(0),
+                TemplateToken::String("=0; "),
+                TemplateToken::OutVar(0),
+                TemplateToken::String("<("),
+                TemplateToken::InVar(0),
+                TemplateToken::String("); "),
+                TemplateToken::OutVar(0),
+                TemplateToken::String("++)\n {"),
+            ],
+            destruct_tokens: &[TemplateToken::String("}\n")],
+            arguments_popped: 1,
+            arguments_pushed: 1,
+        },
+        local_vars: 0,
+        brachet_handlers: &[],
     },
     Builtin {
         token: '+',
-        args: 2,
-        template_before: &[
-            TemplateToken::ArgumentStart,
-            TemplateToken::ArgumentStart,
-            TemplateToken::String("let "),
-            TemplateToken::ArgumentOut,
-            TemplateToken::String(" = ("),
-            TemplateToken::ArgumentVar(0),
-            TemplateToken::String(") + ("),
-            TemplateToken::ArgumentVar(1),
-            TemplateToken::String(");\n"),
-        ],
-        template_after: &[
-            TemplateToken::ArgumentEnd,
-            TemplateToken::ArgumentEnd
-        ],
+        template: ProgramFragment {
+            init_tokens: &[
+                TemplateToken::String("let "),
+                TemplateToken::OutVar(0),
+                TemplateToken::String(" = ("),
+                TemplateToken::InVar(0),
+                TemplateToken::String(") + ("),
+                TemplateToken::InVar(1),
+                TemplateToken::String(");\n"),
+            ],
+            destruct_tokens: &[],
+            arguments_popped: 2,
+            arguments_pushed: 1,
+        },
+        local_vars: 0,
+        brachet_handlers: &[],
     },
     Builtin {
         token: '1',
-        args: 0,
-        template_before: &[
-            TemplateToken::String("let "),
-            TemplateToken::ArgumentOut,
-            TemplateToken::String("= 1;\n"),
-        ],
-        template_after: &[],
+        template: ProgramFragment {
+            init_tokens: &[
+                TemplateToken::String("const "),
+                TemplateToken::OutVar(0),
+                TemplateToken::String("= 1;\n"),
+            ],
+            destruct_tokens: &[],
+            arguments_pushed: 1,
+            arguments_popped: 0,
+        },
+        local_vars: 0,
+        brachet_handlers: &[],
     },
 ];
 
-struct VarArgs(Vec<(String, &'static Builtin, VarArgs)>);
-
-fn transpile_tokens(tokens: &[TemplateToken], iter: &mut impl Iterator<Item = char>, 
-    output: &mut impl Write,
-    varnames: &mut impl Iterator<Item = String>,
-    arg_vars: &mut VarArgs,
-    out_name: &str
-) -> std::io::Result<()> {
-    for outer_token in tokens {
-        match outer_token {
-            TemplateToken::ArgumentVar(n) => write!(output, "{}", arg_vars.0.get(*n).expect("var {n} not defined").0)?,
-            TemplateToken::ArgumentStart => {
-
-                let name = transpile_program_start(iter, output, varnames)?;
-                arg_vars.0.push(name)
-            },
-            TemplateToken::ArgumentEnd => {
-                let mut top = arg_vars.0.pop().unwrap();
-                transpile_tokens(
-                    top.1.template_after,
-                    iter,
-                    output,
-                    varnames,
-                    &mut top.2,
-                    &top.0
-                )?;
-            }
-            TemplateToken::String(s) => write!(output, "{}", s)?,
-            TemplateToken::ArgumentOut => write!(output, "{}", out_name)?,
-            
-        }
-    }
-    return Ok(());
-}
-
-fn transpile_program_start(
+fn transpile_program(
     iter: &mut impl Iterator<Item = char>,
     output: &mut impl Write,
-    varnames: &mut impl Iterator<Item = String>,
-) -> std::io::Result<(String, &'static Builtin, VarArgs)> {
-    let char = iter.next().unwrap();
-    let builtin = BUILTINS.iter().find(|d| d.token == char).unwrap();
+) -> std::io::Result<()> {
+    let mut stack = Stack::new();
 
-    let out_name = varnames.next().unwrap();
+    while let Some(char) = iter.next() {
+        //eprintln!("processing char {char}");
 
-    let mut var_args = VarArgs(vec![]);
-    transpile_tokens(&builtin.template_before, iter, output, varnames, &mut var_args, &out_name)?;
+        if char == ']' {
+            let bracket_handler = stack.pop_group();
 
-    Ok((out_name, builtin, var_args))
+            fragment::dispose_bracket_handler(output, bracket_handler, &mut stack)?;
 
+            continue;
+        }
+
+        let builtin = BUILTINS.iter().find(|d| d.token == char).unwrap();
+
+        let local_vars: Vec<_> = (0..builtin.local_vars)
+            .map(|_| stack.local_var_name())
+            .collect();
+
+        fragment::write_fragment(output, builtin.template, &mut stack, &local_vars)?;
+
+        for bracket_handler in builtin.brachet_handlers {
+            stack.push_group(
+                local_vars.clone(),
+                bracket_handler.fragment,
+                bracket_handler.output_handler,
+            );
+        }
+    }
+
+    dispose_bracket_handler(output, stack.current_group.clone(), &mut stack)?;
+
+    Ok(())
 }
 
 fn main() {
-    let program = "11+r1+1+]r";
+    let program = "11+r[1+1+r]";
 
-    let mut chars = program.chars().rev();
-    let mut varnames = VarNames::default();
-    let mut out = std::io::stdout();
-
-    let (final_name, final_builtin, mut final_args) = transpile_program_start(&mut chars, &mut out, &mut varnames).unwrap();
-
-    write!(out, "console.log({});\n", final_name).unwrap();
-    transpile_tokens(&final_builtin.template_after, &mut chars, &mut out, &mut varnames, &mut final_args, &final_name).unwrap();
+    let mut chars = program.chars();
+    transpile_program(&mut chars, &mut std::io::stdout()).unwrap();
     println!();
 }

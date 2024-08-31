@@ -5,7 +5,6 @@ use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input, LitStr,
 };
-use template_types::{Output, TemplateToken};
 
 mod dsl;
 

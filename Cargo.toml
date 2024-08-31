@@ -2,6 +2,5 @@
 resolver="2"
 
 members=[
-    "gq",
-    "template_generator"
-]
+    "gq"
+, "template_macros", "template_types"]

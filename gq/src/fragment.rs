@@ -1,14 +1,15 @@
+use template_types::{Output, TemplateToken};
+
 use crate::{
-    builtin::TemplateToken,
-    output_writer::{Output, OutputWriter},
+    output_writer::OutputWriter,
     stack::{Stack, StackBracketGroup},
 };
 use std::{io::Write, iter::once};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct ProgramFragment {
-    pub init_tokens: &'static [TemplateToken],
-    pub destruct_tokens: &'static [TemplateToken],
+    pub init_tokens: &'static [TemplateToken<'static>],
+    pub destruct_tokens: &'static [TemplateToken<'static>],
     pub arguments_popped: usize,
     pub arguments_pushed: usize,
 }
@@ -46,7 +47,7 @@ pub fn write_fragment(
 
 #[derive(Clone, Debug)]
 pub struct Destructor {
-    pub fragments: &'static [TemplateToken],
+    pub fragments: &'static [TemplateToken<'static>],
     pub local_vars: Vec<String>,
     pub in_vars: Vec<String>,
     pub out_vars: Vec<String>,
@@ -54,7 +55,7 @@ pub struct Destructor {
 
 pub fn write_output_handler(
     output: &mut OutputWriter<impl Write>,
-    handler: &mut impl Iterator<Item = &'static [TemplateToken]>,
+    handler: &mut impl Iterator<Item = &'static [TemplateToken<'static>]>,
     input_vars: &[String],
     local_vars: &[String],
 ) -> std::io::Result<()> {

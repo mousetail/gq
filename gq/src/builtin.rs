@@ -1,27 +1,14 @@
-use crate::{fragment::ProgramFragment, output_writer::Output};
+use template_types::TemplateToken;
 
-#[derive(Clone, Debug)]
-pub enum TemplateToken {
-    InVar(usize),
-    OutVar(usize),
-    String(Output<'static>),
-    LocalVar(usize),
-    #[allow(unused)]
-    PreviousOuput,
-}
+use crate::fragment::ProgramFragment;
 
-impl TemplateToken {
-    pub const fn str(value: &'static str) -> TemplateToken {
-        TemplateToken::String(Output::str(value))
-    }
-}
-
+#[derive(Debug)]
 pub struct BracketHandler {
     pub fragment: ProgramFragment,
-    pub output_handler: Option<&'static [TemplateToken]>,
+    pub output_handler: Option<&'static [TemplateToken<'static>]>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Builtin {
     pub local_vars: usize,
     pub token: char,

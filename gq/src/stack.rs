@@ -1,9 +1,9 @@
 use std::iter::once;
 
+use template_types::{Output, TemplateToken};
+
 use crate::{
-    builtin::TemplateToken,
     fragment::{Destructor, ProgramFragment},
-    output_writer::Output,
     varnames::VarNames,
 };
 
@@ -11,7 +11,7 @@ use crate::{
 pub struct StackBracketGroup {
     pub brackent_end_fragment: ProgramFragment,
     pub local_variables: Vec<String>,
-    pub output_handler: Option<&'static [TemplateToken]>,
+    pub output_handler: Option<&'static [TemplateToken<'static>]>,
 
     pub destructors: Vec<Destructor>,
     pub stack: Vec<String>,
@@ -96,7 +96,9 @@ impl Stack {
         self.var_names.next().unwrap()
     }
 
-    pub fn output_handlers(&self) -> impl Iterator<Item = Option<&'static [TemplateToken]>> + '_ {
+    pub fn output_handlers(
+        &self,
+    ) -> impl Iterator<Item = Option<&'static [TemplateToken<'static>]>> + '_ {
         once(self.current_group.output_handler.clone())
             .chain((&self.frames).into_iter().map(|k| k.output_handler))
     }

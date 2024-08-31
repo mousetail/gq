@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use builtin::{BracketHandler, Builtin, TemplateToken};
+use builtin::{BracketHandler, Builtin};
 use fragment::{dispose_bracket_handler, ProgramFragment};
 use stack::Stack;
 
@@ -9,7 +9,9 @@ mod fragment;
 mod output_writer;
 mod stack;
 mod varnames;
-use output_writer::{Output, OutputWriter};
+use output_writer::OutputWriter;
+use template_macros::template;
+use template_types::{Output, TemplateToken};
 
 const BUILTINS: &'static [Builtin] = &[
     Builtin {
@@ -220,6 +222,14 @@ fn transpile_program(
 }
 
 fn main() {
+    let value = template!(
+        "
+        abc 123 { var:out }
+        def {que:in} {que:in}
+        "
+    );
+    println!("{value:?}");
+
     let program = "11+r,1+1+r]1]";
 
     let mut chars = program.chars();

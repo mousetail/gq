@@ -1,18 +1,6 @@
 use std::io::Write;
 
-#[derive(Clone, Debug)]
-pub enum Output<'a> {
-    String(&'a str),
-    NewLine,
-    Indent,
-    Dedent,
-}
-
-impl Output<'static> {
-    pub const fn str(s: &'static str) -> Output {
-        Output::String(s)
-    }
-}
+use template_types::Output;
 
 pub struct OutputWriter<W: Write> {
     writer: W,

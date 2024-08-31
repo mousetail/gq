@@ -1,7 +1,7 @@
 use crate::{
+    builtin::TemplateToken,
     output_writer::{Output, OutputWriter},
     stack::{Stack, StackBracketGroup},
-    TemplateToken,
 };
 use std::{io::Write, iter::once};
 

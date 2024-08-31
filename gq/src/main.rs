@@ -1,42 +1,15 @@
 use std::io::Write;
 
+use builtin::{BracketHandler, Builtin, TemplateToken};
 use fragment::{dispose_bracket_handler, ProgramFragment};
 use stack::Stack;
 
+mod builtin;
 mod fragment;
 mod output_writer;
 mod stack;
 mod varnames;
 use output_writer::{Output, OutputWriter};
-
-#[derive(Clone, Debug)]
-enum TemplateToken {
-    InVar(usize),
-    OutVar(usize),
-    String(Output<'static>),
-    LocalVar(usize),
-    #[allow(unused)]
-    PreviousOuput,
-}
-
-impl TemplateToken {
-    const fn str(value: &'static str) -> TemplateToken {
-        TemplateToken::String(Output::str(value))
-    }
-}
-
-#[derive(Default)]
-struct Builtin {
-    local_vars: usize,
-    token: char,
-    template: ProgramFragment,
-    brachet_handlers: &'static [BracketHandler],
-}
-
-struct BracketHandler {
-    fragment: ProgramFragment,
-    output_handler: Option<&'static [TemplateToken]>,
-}
 
 const BUILTINS: &'static [Builtin] = &[
     Builtin {

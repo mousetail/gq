@@ -2,5 +2,6 @@
 resolver="2"
 
 members=[
-    "gq"
+    "gq",
+    "template_generator"
 ]

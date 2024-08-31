@@ -1,10 +1,10 @@
 use std::iter::once;
 
 use crate::{
+    builtin::TemplateToken,
     fragment::{Destructor, ProgramFragment},
     output_writer::Output,
     varnames::VarNames,
-    TemplateToken,
 };
 
 #[derive(Clone, Debug)]

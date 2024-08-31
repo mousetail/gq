@@ -22,18 +22,6 @@ const BUILTINS: &'static [Builtin] = &[
                 {inner}
             "
         ),
-        // ProgramFragment {
-        //     init_tokens: &[
-        //         TemplateToken::str("const "),
-        //         TemplateToken::LocalVar("wrapper"),
-        //         TemplateToken::str("= ()=>{"),
-        //         TemplateToken::String(Output::NewLine),
-        //         TemplateToken::String(Output::Indent),
-        //     ],
-        //     destruct_tokens: &[],
-        //     arguments_popped: 0,
-        //     arguments_pushed: 0,
-        // },
         brachet_handlers: &[
             BracketHandler {
                 output_handler: Some(half_fragment!(
@@ -41,13 +29,6 @@ const BUILTINS: &'static [Builtin] = &[
                     {output:local}({value:in});
                     "
                 )),
-                // Some(&[
-                //     TemplateToken::LocalVar("output"),
-                //     TemplateToken::str("("),
-                //     TemplateToken::InVar(0),
-                //     TemplateToken::str(");"),
-                //     TemplateToken::String(Output::NewLine),
-                // ]),
                 fragment: ProgramFragment {
                     arguments_popped: 0,
                     arguments_pushed: 0,
@@ -72,30 +53,6 @@ const BUILTINS: &'static [Builtin] = &[
                     {wrapper:local}();
                 "
                 ),
-                // ProgramFragment {
-                //     arguments_popped: 0,
-                //     arguments_pushed: 1,
-                //     init_tokens: &[
-                //         TemplateToken::String(Output::Dedent),
-                //         TemplateToken::str("};"),
-                //         TemplateToken::String(Output::NewLine),
-                //         TemplateToken::str("const "),
-                //         TemplateToken::LocalVar("output"),
-                //         TemplateToken::str(" = ("),
-                //         TemplateToken::OutVar(0),
-                //         TemplateToken::str(") => {"),
-                //         TemplateToken::String(Output::Indent),
-                //         TemplateToken::String(Output::NewLine),
-                //     ],
-                //     destruct_tokens: &[
-                //         TemplateToken::String(Output::Dedent),
-                //         TemplateToken::str("};"),
-                //         TemplateToken::String(Output::NewLine),
-                //         TemplateToken::LocalVar("wrapper"),
-                //         TemplateToken::str("();"),
-                //         TemplateToken::String(Output::NewLine),
-                //     ],
-                //},
             },
         ],
     },
@@ -107,49 +64,18 @@ const BUILTINS: &'static [Builtin] = &[
             { inner }
         "
         ),
-        // ProgramFragment {
-        //     init_tokens: &[
-        //         TemplateToken::str("let "),
-        //         TemplateToken::LocalVar("arr"),
-        //         TemplateToken::str("= [];"),
-        //         TemplateToken::String(Output::NewLine),
-        //     ],
-        //     destruct_tokens: &[],
-        //     arguments_popped: 0,
-        //     arguments_pushed: 0,
-        // },
         brachet_handlers: &[BracketHandler {
             output_handler: Some(half_fragment!(
                 "
                 {arr:local}.push({value:in});
             "
             )),
-            // Some(&[
-            //     TemplateToken::LocalVar("arr"),
-            //     TemplateToken::str(".push("),
-            //     TemplateToken::InVar(0),
-            //     TemplateToken::str(");"),
-            //     TemplateToken::String(Output::NewLine),
-            // ]),
             fragment: fragment!(
                 "
                 const {out:out} = {arr:local};
                 {inner}
                 "
             ),
-            // ProgramFragment {
-            //     init_tokens: &[
-            //         TemplateToken::str("const "),
-            //         TemplateToken::OutVar(0),
-            //         TemplateToken::str("="),
-            //         TemplateToken::LocalVar("arr"),
-            //         TemplateToken::str(";"),
-            //         TemplateToken::String(Output::NewLine),
-            //     ],
-            //     destruct_tokens: &[],
-            //     arguments_popped: 0,
-            //     arguments_pushed: 1,
-            // },
         }],
     },
     Builtin {
@@ -186,21 +112,6 @@ const BUILTINS: &'static [Builtin] = &[
             { inner }
         "
         ),
-        // ProgramFragment {
-        //     init_tokens: &[
-        //         TemplateToken::str("let "),
-        //         TemplateToken::OutVar(0),
-        //         TemplateToken::str(" = ("),
-        //         TemplateToken::InVar(0),
-        //         TemplateToken::str(") + ("),
-        //         TemplateToken::InVar(1),
-        //         TemplateToken::str(");"),
-        //         TemplateToken::String(Output::NewLine),
-        //     ],
-        //     destruct_tokens: &[],
-        //     arguments_popped: 2,
-        //     arguments_pushed: 1,
-        // },
         brachet_handlers: &[],
     },
     Builtin {

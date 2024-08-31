@@ -1,6 +1,8 @@
 use std::iter::Peekable;
 
-use template_types::{Output, TemplateToken};
+use proc_macro::TokenStream;
+use quote::quote;
+use template_types::{Output, ProgramFragment, TemplateToken};
 
 fn index_or_new(items: &mut Vec<String>, name: &str) -> usize {
     if let Some(index) = items.iter().position(|k| k == name) {
@@ -15,7 +17,6 @@ fn index_or_new(items: &mut Vec<String>, name: &str) -> usize {
 struct Variables {
     ins: Vec<String>,
     outs: Vec<String>,
-    locals: Vec<String>,
 }
 
 impl Variables {
@@ -26,22 +27,46 @@ impl Variables {
     fn lookup_out(&mut self, name: &str) -> usize {
         index_or_new(&mut self.outs, name)
     }
-
-    fn lookup_local(&mut self, name: &str) -> usize {
-        index_or_new(&mut self.locals, name)
-    }
 }
 
-pub(crate) fn dsl_to_tokens(tokens: &str) -> [Vec<TemplateToken>; 2] {
+pub(crate) fn dsl_to_half_tokens(tokens: &str) -> TokenStream {
+    let mut chars = tokens.char_indices().peekable();
+    let mut indentation = skip_indents(&mut chars, &mut |_index| ());
+    let mut varaibles = Variables::default();
+
+    let tokens = half_parse(tokens, &mut chars, &mut indentation, &mut varaibles);
+
+    assert!(chars.next().is_none(), "Half fragment can't contain middle");
+
+    quote! {&[
+        #(#tokens),*
+    ]}
+    .into()
+}
+
+pub(crate) fn dsl_to_tokens(tokens: &str) -> TokenStream {
     let mut chars = tokens.char_indices().peekable();
 
     let mut indentation = skip_indents(&mut chars, &mut |_index| ());
     let mut varaibles = Variables::default();
 
-    return [
+    let halves = [
         half_parse(tokens, &mut chars, &mut indentation, &mut varaibles),
         half_parse(tokens, &mut chars, &mut indentation, &mut varaibles),
     ];
+    assert!(
+        chars.next().is_none(),
+        "Only allowed one inner per fragment"
+    );
+
+    let fragment = ProgramFragment {
+        init_tokens: halves[0].as_slice(),
+        destruct_tokens: halves[1].as_slice(),
+        arguments_popped: varaibles.ins.len(),
+        arguments_pushed: varaibles.outs.len(),
+    };
+
+    quote!(#fragment).into()
 }
 
 fn skip_indents(
@@ -106,9 +131,7 @@ fn half_parse<'a>(
                     [name, "out"] => {
                         tokens.push(TemplateToken::OutVar(variables.lookup_out(&name)))
                     }
-                    [name, "local"] => {
-                        tokens.push(TemplateToken::LocalVar(variables.lookup_local(&name)))
-                    }
+                    [name, "local"] => tokens.push(TemplateToken::LocalVar(&name)),
                     _ => panic!("Unexpected variable name"),
                 }
                 in_substitution = false;
@@ -136,18 +159,26 @@ fn half_parse<'a>(
             let number_of_spaces = skip_indents(chars, &mut |index| {
                 get_partial_text(index);
             });
-            if number_of_spaces > *indentation {
-                tokens.push(TemplateToken::String(Output::Indent))
-            } else if number_of_spaces < *indentation {
-                tokens.push(TemplateToken::String(Output::Dedent))
+
+            // Don't try to parse indentation past the last line
+            if let Some(_) = chars.peek() {
+                if number_of_spaces > *indentation {
+                    tokens.push(TemplateToken::String(Output::Indent))
+                } else if number_of_spaces < *indentation {
+                    tokens.push(TemplateToken::String(Output::Dedent))
+                }
+                tokens.push(TemplateToken::String(Output::NewLine));
+                *indentation = number_of_spaces;
             }
-            *indentation = number_of_spaces;
         }
     }
     if in_substitution {
         panic!("End of string encountered during substitution");
     }
     tokens.extend(wrap(get_partial_text(string.len())));
+
+    // Always ensure at least one line break between tokens
+    tokens.push(TemplateToken::String(Output::NewLine));
 
     tokens
 }

@@ -1,16 +1,13 @@
-use std::iter::once;
+use std::{collections::HashMap, iter::once};
 
-use template_types::{Output, TemplateToken};
+use template_types::{Output, ProgramFragment, TemplateToken};
 
-use crate::{
-    fragment::{Destructor, ProgramFragment},
-    varnames::VarNames,
-};
+use crate::{fragment::Destructor, varnames::VarNames};
 
 #[derive(Clone, Debug)]
 pub struct StackBracketGroup {
-    pub brackent_end_fragment: ProgramFragment,
-    pub local_variables: Vec<String>,
+    pub brackent_end_fragment: ProgramFragment<'static>,
+    pub local_variables: HashMap<String, String>,
     pub output_handler: Option<&'static [TemplateToken<'static>]>,
 
     pub destructors: Vec<Destructor>,
@@ -38,7 +35,7 @@ impl Stack {
             var_names: VarNames::default(),
             current_group: StackBracketGroup {
                 brackent_end_fragment: ProgramFragment::default(),
-                local_variables: vec![],
+                local_variables: HashMap::new(),
                 output_handler: Some(DEFAULT_OUTPUT_HANDLER),
                 destructors: vec![],
                 stack: vec![],
@@ -69,12 +66,10 @@ impl Stack {
 
     pub fn push_group(
         &mut self,
-        local_vars: Vec<String>,
-        end_fragment: ProgramFragment,
+        local_vars: HashMap<String, String>,
+        end_fragment: ProgramFragment<'static>,
         output_handler: Option<&'static [TemplateToken]>,
     ) {
-        print!("// pushed {}", self.frames.len());
-
         self.frames.push(std::mem::replace(
             &mut self.current_group,
             StackBracketGroup {
@@ -88,7 +83,6 @@ impl Stack {
     }
 
     pub fn pop_group(&mut self) -> StackBracketGroup {
-        print!("// popped {}", self.frames.len());
         std::mem::replace(&mut self.current_group, self.frames.pop().unwrap())
     }
 

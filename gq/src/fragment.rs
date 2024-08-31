@@ -1,24 +1,16 @@
-use template_types::{Output, TemplateToken};
+use template_types::{Output, ProgramFragment, TemplateToken};
 
 use crate::{
     output_writer::OutputWriter,
     stack::{Stack, StackBracketGroup},
 };
-use std::{io::Write, iter::once};
-
-#[derive(Default, Clone, Copy, Debug)]
-pub struct ProgramFragment {
-    pub init_tokens: &'static [TemplateToken<'static>],
-    pub destruct_tokens: &'static [TemplateToken<'static>],
-    pub arguments_popped: usize,
-    pub arguments_pushed: usize,
-}
+use std::{collections::HashMap, io::Write, iter::once};
 
 pub fn write_fragment(
     output: &mut OutputWriter<impl Write>,
-    fragment: ProgramFragment,
+    fragment: ProgramFragment<'static>,
     stack: &mut Stack,
-    local_vars: &[String],
+    local_vars: &HashMap<String, String>,
 ) -> std::io::Result<()> {
     let in_vars: Vec<_> = (0..fragment.arguments_popped)
         .map(|_| stack.pop())
@@ -39,7 +31,7 @@ pub fn write_fragment(
         fragments: fragment.destruct_tokens,
         in_vars,
         out_vars,
-        local_vars: local_vars.to_vec(),
+        local_vars: local_vars.clone(),
     });
 
     Ok(())
@@ -48,7 +40,7 @@ pub fn write_fragment(
 #[derive(Clone, Debug)]
 pub struct Destructor {
     pub fragments: &'static [TemplateToken<'static>],
-    pub local_vars: Vec<String>,
+    pub local_vars: HashMap<String, String>,
     pub in_vars: Vec<String>,
     pub out_vars: Vec<String>,
 }
@@ -57,7 +49,7 @@ pub fn write_output_handler(
     output: &mut OutputWriter<impl Write>,
     handler: &mut impl Iterator<Item = &'static [TemplateToken<'static>]>,
     input_vars: &[String],
-    local_vars: &[String],
+    local_vars: &HashMap<String, String>,
 ) -> std::io::Result<()> {
     let value = handler.next().unwrap();
     for token in value {
@@ -67,7 +59,9 @@ pub fn write_output_handler(
             ))?,
             TemplateToken::OutVar(_) => panic!("Output handlers can not produce output {value:?}"),
             TemplateToken::String(s) => output.write(s.clone())?,
-            TemplateToken::LocalVar(n) => output.write(Output::String(local_vars[*n].as_str()))?,
+            TemplateToken::LocalVar(n) => {
+                output.write(Output::String(local_vars.get(*n).unwrap().as_str()))?
+            }
             TemplateToken::PreviousOuput => {
                 write_output_handler(output, handler, input_vars, local_vars)?
             }
@@ -114,16 +108,22 @@ pub fn dispose_bracket_handler(
 pub fn write_tokens(
     output: &mut OutputWriter<impl Write>,
     tokens: &[TemplateToken],
-    local_vars: &[String],
+    local_vars: &HashMap<String, String>,
     in_vars: &[String],
     out_vars: &[String],
 ) -> std::io::Result<()> {
-    for token in tokens {
+    for token in tokens
+        .into_iter()
+        .copied()
+        .chain(Some(TemplateToken::String(Output::NewLine)))
+    {
         match token {
-            TemplateToken::InVar(n) => output.write(Output::String(in_vars[*n].as_str()))?,
-            TemplateToken::OutVar(n) => output.write(Output::String(out_vars[*n].as_str()))?,
+            TemplateToken::InVar(n) => output.write(Output::String(in_vars[n].as_str()))?,
+            TemplateToken::OutVar(n) => output.write(Output::String(out_vars[n].as_str()))?,
             TemplateToken::String(val) => output.write(val.clone())?,
-            TemplateToken::LocalVar(n) => output.write(Output::String(local_vars[*n].as_str()))?,
+            TemplateToken::LocalVar(n) => {
+                output.write(Output::String(local_vars.get(n).unwrap().as_str()))?
+            }
             TemplateToken::PreviousOuput => panic!("Use of previous output outside output handler"),
         }
     }

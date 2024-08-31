@@ -3,7 +3,7 @@ use proc_macro2::TokenStream;
 #[cfg(feature = "proc_macro")]
 use quote::{format_ident, quote, ToTokens};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum Output<'a> {
     String(&'a str),
     NewLine,
@@ -11,25 +11,32 @@ pub enum Output<'a> {
     Dedent,
 }
 
-impl Output<'static> {
-    pub const fn str(s: &'static str) -> Output {
+impl<'a> Output<'a> {
+    pub const fn str(s: &'a str) -> Output {
         Output::String(s)
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum TemplateToken<'a> {
     InVar(usize),
     OutVar(usize),
     String(Output<'a>),
-    LocalVar(usize),
+    LocalVar(&'a str),
     #[allow(unused)]
     PreviousOuput,
 }
 
-impl TemplateToken<'static> {
-    pub const fn str(s: &'static str) -> Self {
+impl<'a> TemplateToken<'a> {
+    pub const fn str(s: &'a str) -> Self {
         TemplateToken::String(Output::str(s))
+    }
+
+    pub fn get_local_var_names(&self) -> Option<&'a str> {
+        match self {
+            TemplateToken::LocalVar(k) => Some(k),
+            _ => None,
+        }
     }
 }
 
@@ -70,6 +77,48 @@ impl<'a> ToTokens for TemplateToken<'a> {
 
         tokens.extend(quote! {
             template_types::TemplateToken::#name_ident #value
+        })
+    }
+}
+
+#[derive(Default, Clone, Copy, Debug)]
+pub struct ProgramFragment<'a> {
+    pub init_tokens: &'a [TemplateToken<'a>],
+    pub destruct_tokens: &'a [TemplateToken<'a>],
+    pub arguments_popped: usize,
+    pub arguments_pushed: usize,
+}
+
+impl<'a> ProgramFragment<'a> {
+    pub fn get_local_var_names(&self) -> impl Iterator<Item = &'a str> {
+        self.init_tokens
+            .iter()
+            .chain(self.destruct_tokens.iter())
+            .flat_map(|k| k.get_local_var_names())
+    }
+}
+
+#[cfg(feature = "proc_macro")]
+impl<'a> ToTokens for ProgramFragment<'a> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let ProgramFragment {
+            init_tokens,
+            destruct_tokens,
+            arguments_popped,
+            arguments_pushed,
+        } = self;
+
+        tokens.extend(quote! {
+            template_types::ProgramFragment::<'static> {
+                init_tokens: &[
+                    #(#init_tokens),*
+                ],
+                destruct_tokens: &[
+                    #(#destruct_tokens),*
+                ],
+                arguments_pushed: #arguments_pushed,
+                arguments_popped: #arguments_popped
+            }
         })
     }
 }

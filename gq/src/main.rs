@@ -1,7 +1,7 @@
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 
 use builtin::{BracketHandler, Builtin};
-use fragment::{dispose_bracket_handler, ProgramFragment};
+use fragment::dispose_bracket_handler;
 use stack::Stack;
 
 mod builtin;
@@ -10,34 +10,44 @@ mod output_writer;
 mod stack;
 mod varnames;
 use output_writer::OutputWriter;
-use template_macros::template;
-use template_types::{Output, TemplateToken};
+use template_macros::{fragment, half_fragment};
+use template_types::{Output, ProgramFragment, TemplateToken};
 
 const BUILTINS: &'static [Builtin] = &[
     Builtin {
-        local_vars: 2,
         token: ',',
-        template: ProgramFragment {
-            init_tokens: &[
-                TemplateToken::str("const "),
-                TemplateToken::LocalVar(0),
-                TemplateToken::str("= ()=>{"),
-                TemplateToken::String(Output::NewLine),
-                TemplateToken::String(Output::Indent),
-            ],
-            destruct_tokens: &[],
-            arguments_popped: 0,
-            arguments_pushed: 0,
-        },
+        template: fragment!(
+            "
+            const {wrapper:local} = () => {{
+                {inner}
+            "
+        ),
+        // ProgramFragment {
+        //     init_tokens: &[
+        //         TemplateToken::str("const "),
+        //         TemplateToken::LocalVar("wrapper"),
+        //         TemplateToken::str("= ()=>{"),
+        //         TemplateToken::String(Output::NewLine),
+        //         TemplateToken::String(Output::Indent),
+        //     ],
+        //     destruct_tokens: &[],
+        //     arguments_popped: 0,
+        //     arguments_pushed: 0,
+        // },
         brachet_handlers: &[
             BracketHandler {
-                output_handler: Some(&[
-                    TemplateToken::LocalVar(1),
-                    TemplateToken::str("("),
-                    TemplateToken::InVar(0),
-                    TemplateToken::str(");"),
-                    TemplateToken::String(Output::NewLine),
-                ]),
+                output_handler: Some(half_fragment!(
+                    "
+                    {output:local}({value:in});
+                    "
+                )),
+                // Some(&[
+                //     TemplateToken::LocalVar("output"),
+                //     TemplateToken::str("("),
+                //     TemplateToken::InVar(0),
+                //     TemplateToken::str(");"),
+                //     TemplateToken::String(Output::NewLine),
+                // ]),
                 fragment: ProgramFragment {
                     arguments_popped: 0,
                     arguments_pushed: 0,
@@ -46,75 +56,100 @@ const BUILTINS: &'static [Builtin] = &[
                 },
             },
             BracketHandler {
-                output_handler: Some(&[
-                    TemplateToken::LocalVar(1),
-                    TemplateToken::str("("),
-                    TemplateToken::InVar(0),
-                    TemplateToken::str(");"),
-                    TemplateToken::String(Output::NewLine),
-                ]),
-                fragment: ProgramFragment {
-                    arguments_popped: 0,
-                    arguments_pushed: 1,
-                    init_tokens: &[
-                        TemplateToken::String(Output::Dedent),
-                        TemplateToken::str("};"),
-                        TemplateToken::String(Output::NewLine),
-                        TemplateToken::str("const "),
-                        TemplateToken::LocalVar(1),
-                        TemplateToken::str(" = ("),
-                        TemplateToken::OutVar(0),
-                        TemplateToken::str(") => {"),
-                        TemplateToken::String(Output::Indent),
-                        TemplateToken::String(Output::NewLine),
-                    ],
-                    destruct_tokens: &[
-                        TemplateToken::String(Output::Dedent),
-                        TemplateToken::str("};"),
-                        TemplateToken::String(Output::NewLine),
-                        TemplateToken::LocalVar(0),
-                        TemplateToken::str("();"),
-                        TemplateToken::String(Output::NewLine),
-                    ],
-                },
+                output_handler: Some(half_fragment!(
+                    "
+                    {output:local}({value:in});
+                    "
+                )),
+                fragment: fragment!(
+                    "
+                        //
+                    }};
+                    const {output:local} = ({out_var:out})=>{{
+                        {inner}
+                    }}
+
+                    {wrapper:local}();
+                "
+                ),
+                // ProgramFragment {
+                //     arguments_popped: 0,
+                //     arguments_pushed: 1,
+                //     init_tokens: &[
+                //         TemplateToken::String(Output::Dedent),
+                //         TemplateToken::str("};"),
+                //         TemplateToken::String(Output::NewLine),
+                //         TemplateToken::str("const "),
+                //         TemplateToken::LocalVar("output"),
+                //         TemplateToken::str(" = ("),
+                //         TemplateToken::OutVar(0),
+                //         TemplateToken::str(") => {"),
+                //         TemplateToken::String(Output::Indent),
+                //         TemplateToken::String(Output::NewLine),
+                //     ],
+                //     destruct_tokens: &[
+                //         TemplateToken::String(Output::Dedent),
+                //         TemplateToken::str("};"),
+                //         TemplateToken::String(Output::NewLine),
+                //         TemplateToken::LocalVar("wrapper"),
+                //         TemplateToken::str("();"),
+                //         TemplateToken::String(Output::NewLine),
+                //     ],
+                //},
             },
         ],
     },
     Builtin {
-        local_vars: 1,
         token: '[',
-        template: ProgramFragment {
-            init_tokens: &[
-                TemplateToken::str("let "),
-                TemplateToken::LocalVar(0),
-                TemplateToken::str("= [];"),
-                TemplateToken::String(Output::NewLine),
-            ],
-            destruct_tokens: &[],
-            arguments_popped: 0,
-            arguments_pushed: 0,
-        },
+        template: fragment!(
+            "
+            const {arr:local} = [];
+            { inner }
+        "
+        ),
+        // ProgramFragment {
+        //     init_tokens: &[
+        //         TemplateToken::str("let "),
+        //         TemplateToken::LocalVar("arr"),
+        //         TemplateToken::str("= [];"),
+        //         TemplateToken::String(Output::NewLine),
+        //     ],
+        //     destruct_tokens: &[],
+        //     arguments_popped: 0,
+        //     arguments_pushed: 0,
+        // },
         brachet_handlers: &[BracketHandler {
-            output_handler: Some(&[
-                TemplateToken::LocalVar(0),
-                TemplateToken::str(".push("),
-                TemplateToken::InVar(0),
-                TemplateToken::str(");"),
-                TemplateToken::String(Output::NewLine),
-            ]),
-            fragment: ProgramFragment {
-                init_tokens: &[
-                    TemplateToken::str("const "),
-                    TemplateToken::OutVar(0),
-                    TemplateToken::str("="),
-                    TemplateToken::LocalVar(0),
-                    TemplateToken::str(";"),
-                    TemplateToken::String(Output::NewLine),
-                ],
-                destruct_tokens: &[],
-                arguments_popped: 0,
-                arguments_pushed: 1,
-            },
+            output_handler: Some(half_fragment!(
+                "
+                {arr:local}.push({value:in});
+            "
+            )),
+            // Some(&[
+            //     TemplateToken::LocalVar("arr"),
+            //     TemplateToken::str(".push("),
+            //     TemplateToken::InVar(0),
+            //     TemplateToken::str(");"),
+            //     TemplateToken::String(Output::NewLine),
+            // ]),
+            fragment: fragment!(
+                "
+                const {out:out} = {arr:local};
+                {inner}
+                "
+            ),
+            // ProgramFragment {
+            //     init_tokens: &[
+            //         TemplateToken::str("const "),
+            //         TemplateToken::OutVar(0),
+            //         TemplateToken::str("="),
+            //         TemplateToken::LocalVar("arr"),
+            //         TemplateToken::str(";"),
+            //         TemplateToken::String(Output::NewLine),
+            //     ],
+            //     destruct_tokens: &[],
+            //     arguments_popped: 0,
+            //     arguments_pushed: 1,
+            // },
         }],
     },
     Builtin {
@@ -141,43 +176,40 @@ const BUILTINS: &'static [Builtin] = &[
             arguments_popped: 1,
             arguments_pushed: 1,
         },
-        local_vars: 0,
         brachet_handlers: &[],
     },
     Builtin {
         token: '+',
-        template: ProgramFragment {
-            init_tokens: &[
-                TemplateToken::str("let "),
-                TemplateToken::OutVar(0),
-                TemplateToken::str(" = ("),
-                TemplateToken::InVar(0),
-                TemplateToken::str(") + ("),
-                TemplateToken::InVar(1),
-                TemplateToken::str(");"),
-                TemplateToken::String(Output::NewLine),
-            ],
-            destruct_tokens: &[],
-            arguments_popped: 2,
-            arguments_pushed: 1,
-        },
-        local_vars: 0,
+        template: fragment!(
+            "
+            const {out:out} = {op1:in} + {op2:in};
+            { inner }
+        "
+        ),
+        // ProgramFragment {
+        //     init_tokens: &[
+        //         TemplateToken::str("let "),
+        //         TemplateToken::OutVar(0),
+        //         TemplateToken::str(" = ("),
+        //         TemplateToken::InVar(0),
+        //         TemplateToken::str(") + ("),
+        //         TemplateToken::InVar(1),
+        //         TemplateToken::str(");"),
+        //         TemplateToken::String(Output::NewLine),
+        //     ],
+        //     destruct_tokens: &[],
+        //     arguments_popped: 2,
+        //     arguments_pushed: 1,
+        // },
         brachet_handlers: &[],
     },
     Builtin {
         token: '1',
-        template: ProgramFragment {
-            init_tokens: &[
-                TemplateToken::str("const "),
-                TemplateToken::OutVar(0),
-                TemplateToken::str("= 1;"),
-                TemplateToken::String(Output::NewLine),
-            ],
-            destruct_tokens: &[],
-            arguments_pushed: 1,
-            arguments_popped: 0,
-        },
-        local_vars: 0,
+        template: fragment!(
+            "
+            const {out:out} = 1;
+            "
+        ),
         brachet_handlers: &[],
     },
 ];
@@ -189,8 +221,6 @@ fn transpile_program(
     let mut stack = Stack::new();
 
     while let Some(char) = iter.next() {
-        //eprintln!("processing char {char}");
-
         if char == ']' {
             let bracket_handler = stack.pop_group();
 
@@ -201,8 +231,9 @@ fn transpile_program(
 
         let builtin = BUILTINS.iter().find(|d| d.token == char).unwrap();
 
-        let local_vars: Vec<_> = (0..builtin.local_vars)
-            .map(|_| stack.local_var_name())
+        let local_vars: HashMap<_, _> = builtin
+            .get_local_var_names()
+            .map(|d| (d.to_owned(), stack.local_var_name()))
             .collect();
 
         fragment::write_fragment(output, builtin.template, &mut stack, &local_vars)?;
@@ -222,15 +253,7 @@ fn transpile_program(
 }
 
 fn main() {
-    let value = template!(
-        "
-        abc 123 { var:out }
-        def {que:in} {que:in}
-        "
-    );
-    println!("{value:?}");
-
-    let program = "11+r,1+1+r]1]";
+    let program = "11+r[,1+1+r]1]]";
 
     let mut chars = program.chars();
 

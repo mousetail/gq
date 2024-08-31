@@ -1,6 +1,5 @@
-use dsl::dsl_to_tokens;
+use dsl::{dsl_to_half_tokens, dsl_to_tokens};
 use proc_macro::TokenStream;
-use quote::quote;
 use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input, LitStr,
@@ -21,18 +20,23 @@ impl Parse for Template {
 }
 
 #[proc_macro]
-pub fn template(input: TokenStream) -> TokenStream {
+pub fn fragment(input: TokenStream) -> TokenStream {
     let Template { value } = parse_macro_input!(input as Template);
 
     let inner_value = value.value();
 
-    let tokens = dsl_to_tokens(&inner_value).into_iter().flatten();
+    let tokens = dsl_to_tokens(&inner_value);
 
-    let value = quote! {
-        &[
-            #(#tokens),*
-        ]
-    };
+    TokenStream::from(tokens)
+}
 
-    TokenStream::from(value)
+#[proc_macro]
+pub fn half_fragment(input: TokenStream) -> TokenStream {
+    let Template { value } = parse_macro_input!(input as Template);
+
+    let inner_value = value.value();
+
+    let tokens = dsl_to_half_tokens(&inner_value);
+
+    TokenStream::from(tokens)
 }

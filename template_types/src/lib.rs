@@ -23,8 +23,6 @@ pub enum TemplateToken<'a> {
     OutVar(usize),
     String(Output<'a>),
     LocalVar(&'a str),
-    #[allow(unused)]
-    PreviousOuput,
 }
 
 impl<'a> TemplateToken<'a> {
@@ -70,7 +68,6 @@ impl<'a> ToTokens for TemplateToken<'a> {
             TemplateToken::OutVar(a) => ("OutVar", quote! {(#a)}),
             TemplateToken::String(a) => ("String", quote! {(#a)}),
             TemplateToken::LocalVar(a) => ("LocalVar", quote! {(#a)}),
-            TemplateToken::PreviousOuput => ("PreviousOutput", quote!()),
         };
 
         let name_ident = format_ident!("{name}");

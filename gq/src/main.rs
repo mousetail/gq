@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write};
+use std::{collections::HashMap, io::Write, iter::Peekable};
 
 use builtins::BUILTINS;
 use fragment::dispose_bracket_handler;
@@ -13,7 +13,7 @@ mod varnames;
 use output_writer::OutputWriter;
 
 fn transpile_program(
-    iter: &mut impl Iterator<Item = char>,
+    iter: &mut Peekable<impl Iterator<Item = char>>,
     output: &mut OutputWriter<impl Write>,
 ) -> std::io::Result<()> {
     let mut stack = Stack::new();
@@ -51,9 +51,10 @@ fn transpile_program(
 }
 
 fn main() {
-    let program = "11+r[,1+1+r]1]]";
+    //let program = "11+r[,,1+1+r]1]]";
+    let program = "111++r,11]";
 
-    let mut chars = program.chars();
+    let mut chars = program.chars().peekable();
 
     let mut writer = OutputWriter::new(std::io::stdout());
     println!("(()=>{{");

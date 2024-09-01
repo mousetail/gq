@@ -1,7 +1,6 @@
 use template_macros::{fragment, half_fragment};
-use template_types::ProgramFragment;
 
-use crate::builtin::{BracketHandler, Builtin};
+use crate::builtin::{BracketHandler, Builtin, MultiOutputBehavior, OutputHandler};
 
 pub const BUILTINS: &'static [Builtin] = &[
     Builtin {
@@ -12,28 +11,17 @@ pub const BUILTINS: &'static [Builtin] = &[
                 {inner}
             "
         ),
-        bracket_handlers: &[
-            BracketHandler {
-                output_handler: Some(half_fragment!(
+        bracket_handlers: &[BracketHandler {
+            output_handler: Some(OutputHandler {
+                fragment: half_fragment!(
                     "
-                    {output:local}({value:in});
+                        {output:local}({value:in});
                     "
-                )),
-                fragment: ProgramFragment {
-                    arguments_popped: 0,
-                    arguments_pushed: 0,
-                    init_tokens: &[],
-                    destruct_tokens: &[],
-                },
-            },
-            BracketHandler {
-                output_handler: Some(half_fragment!(
-                    "
-                    {output:local}({value:in});
-                    "
-                )),
-                fragment: fragment!(
-                    "
+                ),
+                behavior: MultiOutputBehavior::FlattenAll,
+            }),
+            fragment: fragment!(
+                "
                         //
                     }};
                     const {output:local} = ({out_var:out})=>{{
@@ -42,9 +30,8 @@ pub const BUILTINS: &'static [Builtin] = &[
 
                     {wrapper:local}();
                 "
-                ),
-            },
-        ],
+            ),
+        }],
     },
     Builtin {
         token: '[',
@@ -54,19 +41,28 @@ pub const BUILTINS: &'static [Builtin] = &[
             { inner }
         "
         ),
-        bracket_handlers: &[BracketHandler {
-            output_handler: Some(half_fragment!(
-                "
-                {arr:local}.push({value:in});
-            "
-            )),
-            fragment: fragment!(
-                "
-                const {out:out} = {arr:local};
-                {inner}
-                "
-            ),
-        }],
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: None,
+                fragment: fragment!(""),
+            },
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!(
+                        "
+                        {arr:local}.push({value:in});
+                        "
+                    ),
+                    behavior: MultiOutputBehavior::FlattenAll,
+                }),
+                fragment: fragment!(
+                    "
+                    const {out:out} = {arr:local};
+                    {inner}
+                    "
+                ),
+            },
+        ],
     },
     Builtin {
         token: 'r',

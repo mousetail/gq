@@ -1,6 +1,7 @@
-use template_types::{Output, ProgramFragment, TemplateToken};
+use template_types::{HighestVarNumbers, Output, ProgramFragment, TemplateToken};
 
 use crate::{
+    builtin::OutputHandler,
     output_writer::OutputWriter,
     stack::{Stack, StackBracketGroup},
 };
@@ -47,25 +48,59 @@ pub struct Destructor {
 
 pub fn write_output_handler(
     output: &mut OutputWriter<impl Write>,
-    handler: &mut impl Iterator<Item = &'static [TemplateToken<'static>]>,
+    handler: &'static [TemplateToken],
     input_vars: &[String],
     local_vars: &HashMap<String, String>,
 ) -> std::io::Result<()> {
-    let value = handler.next().unwrap();
-    for token in value {
+    for token in handler {
         match token {
             TemplateToken::InVar(k) => output.write(Output::String(
                 input_vars.get(*k).map(|d| d.as_str()).unwrap_or(""),
             ))?,
-            TemplateToken::OutVar(_) => panic!("Output handlers can not produce output {value:?}"),
+            TemplateToken::OutVar(_) => panic!("Output handlers can not produce output {token:?}"),
             TemplateToken::String(s) => output.write(s.clone())?,
             TemplateToken::LocalVar(n) => {
                 output.write(Output::String(local_vars.get(*n).unwrap().as_str()))?
             }
-            TemplateToken::PreviousOuput => {
-                write_output_handler(output, handler, input_vars, local_vars)?
-            }
         }
+    }
+
+    Ok(())
+}
+
+pub fn handle_group_output(
+    output: &mut OutputWriter<impl Write>,
+    handler: OutputHandler,
+    input_vars: &[String],
+    local_vars: &HashMap<String, String>,
+) -> std::io::Result<()> {
+    let number_of_input_vars = handler.fragment.get_number_of_input_vars();
+
+    match handler.behavior {
+        crate::builtin::MultiOutputBehavior::OnlyFirst => {
+            if number_of_input_vars > input_vars.len() {
+                panic!(
+                    "This group requires at least {number_of_input_vars} values left on the stack"
+                )
+            }
+            write_output_handler(
+                output,
+                handler.fragment,
+                &input_vars[..number_of_input_vars],
+                local_vars,
+            )?
+        }
+        crate::builtin::MultiOutputBehavior::FlattenAll => {
+            assert_eq!(
+                number_of_input_vars, 1,
+                "Flatten all can only be used with a single input var"
+            );
+
+            for i in 0..input_vars.len() {
+                write_output_handler(output, handler.fragment, &input_vars[i..i + 1], local_vars)?;
+            }
+        } // crate::builtin::MultiOutputBehavior::Array => todo!(),
+          // crate::builtin::MultiOutputBehavior::Variadic => todo!(),
     }
 
     Ok(())
@@ -76,11 +111,13 @@ pub fn dispose_bracket_handler(
     bracket_handler: StackBracketGroup,
     stack: &mut Stack,
 ) -> std::io::Result<()> {
-    write_output_handler(
+    handle_group_output(
         output,
-        &mut once(bracket_handler.output_handler)
+        once(bracket_handler.output_handler)
             .chain(stack.output_handlers())
-            .flatten(),
+            .flatten()
+            .next()
+            .unwrap(),
         &bracket_handler.stack,
         &bracket_handler.local_variables,
     )?;
@@ -124,7 +161,6 @@ pub fn write_tokens(
             TemplateToken::LocalVar(n) => {
                 output.write(Output::String(local_vars.get(n).unwrap().as_str()))?
             }
-            TemplateToken::PreviousOuput => panic!("Use of previous output outside output handler"),
         }
     }
 

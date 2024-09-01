@@ -2,13 +2,17 @@ use std::{collections::HashMap, iter::once};
 
 use template_types::{Output, ProgramFragment, TemplateToken};
 
-use crate::{fragment::Destructor, varnames::VarNames};
+use crate::{
+    builtin::{MultiOutputBehavior, OutputHandler},
+    fragment::Destructor,
+    varnames::VarNames,
+};
 
 #[derive(Clone, Debug)]
 pub struct StackBracketGroup {
     pub brackent_end_fragment: ProgramFragment<'static>,
     pub local_variables: HashMap<String, String>,
-    pub output_handler: Option<&'static [TemplateToken<'static>]>,
+    pub output_handler: Option<OutputHandler>,
 
     pub destructors: Vec<Destructor>,
     pub stack: Vec<String>,
@@ -21,12 +25,15 @@ pub struct Stack {
     var_names: VarNames,
 }
 
-const DEFAULT_OUTPUT_HANDLER: &'static [TemplateToken] = &[
-    TemplateToken::str("console.log("),
-    TemplateToken::InVar(0),
-    TemplateToken::str(");"),
-    TemplateToken::String(Output::NewLine),
-];
+const DEFAULT_OUTPUT_HANDLER: OutputHandler = OutputHandler {
+    fragment: &[
+        TemplateToken::str("console.log("),
+        TemplateToken::InVar(0),
+        TemplateToken::str(");"),
+        TemplateToken::String(Output::NewLine),
+    ],
+    behavior: MultiOutputBehavior::FlattenAll,
+};
 
 impl Stack {
     pub fn new() -> Stack {
@@ -68,7 +75,7 @@ impl Stack {
         &mut self,
         local_vars: HashMap<String, String>,
         end_fragment: ProgramFragment<'static>,
-        output_handler: Option<&'static [TemplateToken]>,
+        output_handler: Option<OutputHandler>,
     ) {
         self.frames.push(std::mem::replace(
             &mut self.current_group,
@@ -90,9 +97,7 @@ impl Stack {
         self.var_names.next().unwrap()
     }
 
-    pub fn output_handlers(
-        &self,
-    ) -> impl Iterator<Item = Option<&'static [TemplateToken<'static>]>> + '_ {
+    pub fn output_handlers(&self) -> impl Iterator<Item = Option<OutputHandler>> + '_ {
         once(self.current_group.output_handler.clone())
             .chain((&self.frames).into_iter().map(|k| k.output_handler))
     }

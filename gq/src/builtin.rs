@@ -1,9 +1,24 @@
 use template_types::{HighestVarNumbers, ProgramFragment, TemplateToken};
 
+#[derive(Debug, Clone, Copy)]
+pub enum MultiOutputBehavior {
+    #[allow(unused)]
+    OnlyFirst,
+    FlattenAll,
+    // Array,
+    // Variadic,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct OutputHandler {
+    pub fragment: &'static [TemplateToken<'static>],
+    pub behavior: MultiOutputBehavior,
+}
+
 #[derive(Debug)]
 pub struct BracketHandler {
     pub fragment: ProgramFragment<'static>,
-    pub output_handler: Option<&'static [TemplateToken<'static>]>,
+    pub output_handler: Option<OutputHandler>,
 }
 
 impl BracketHandler {
@@ -11,7 +26,7 @@ impl BracketHandler {
         return self.fragment.get_local_var_names().chain(
             self.output_handler
                 .into_iter()
-                .flat_map(|k| k.get_local_var_names()),
+                .flat_map(|k| k.fragment.get_local_var_names()),
         );
     }
 }

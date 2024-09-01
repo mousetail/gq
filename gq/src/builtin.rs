@@ -1,4 +1,4 @@
-use template_types::{ProgramFragment, TemplateToken};
+use template_types::{HighestVarNumbers, ProgramFragment, TemplateToken};
 
 #[derive(Debug)]
 pub struct BracketHandler {
@@ -6,24 +6,29 @@ pub struct BracketHandler {
     pub output_handler: Option<&'static [TemplateToken<'static>]>,
 }
 
+impl BracketHandler {
+    fn get_local_var_names(&self) -> impl Iterator<Item = &'static str> {
+        return self.fragment.get_local_var_names().chain(
+            self.output_handler
+                .into_iter()
+                .flat_map(|k| k.get_local_var_names()),
+        );
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct Builtin {
     pub token: char,
     pub template: ProgramFragment<'static>,
-    pub brachet_handlers: &'static [BracketHandler],
+    pub bracket_handlers: &'static [BracketHandler],
 }
 
 impl Builtin {
     pub fn get_local_var_names(&self) -> impl Iterator<Item = &'static str> {
-        self.template
-            .get_local_var_names()
-            .chain(self.brachet_handlers.iter().flat_map(|handler| {
-                handler.fragment.get_local_var_names().chain(
-                    handler
-                        .output_handler
-                        .iter()
-                        .flat_map(|z| z.iter().flat_map(|m| m.get_local_var_names())),
-                )
-            }))
+        self.template.get_local_var_names().chain(
+            self.bracket_handlers
+                .iter()
+                .flat_map(|handler| handler.get_local_var_names()),
+        )
     }
 }

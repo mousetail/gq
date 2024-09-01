@@ -22,7 +22,7 @@ const BUILTINS: &'static [Builtin] = &[
                 {inner}
             "
         ),
-        brachet_handlers: &[
+        bracket_handlers: &[
             BracketHandler {
                 output_handler: Some(half_fragment!(
                     "
@@ -64,7 +64,7 @@ const BUILTINS: &'static [Builtin] = &[
             { inner }
         "
         ),
-        brachet_handlers: &[BracketHandler {
+        bracket_handlers: &[BracketHandler {
             output_handler: Some(half_fragment!(
                 "
                 {arr:local}.push({value:in});
@@ -102,7 +102,7 @@ const BUILTINS: &'static [Builtin] = &[
             arguments_popped: 1,
             arguments_pushed: 1,
         },
-        brachet_handlers: &[],
+        bracket_handlers: &[],
     },
     Builtin {
         token: '+',
@@ -112,7 +112,7 @@ const BUILTINS: &'static [Builtin] = &[
             { inner }
         "
         ),
-        brachet_handlers: &[],
+        bracket_handlers: &[],
     },
     Builtin {
         token: '1',
@@ -121,7 +121,7 @@ const BUILTINS: &'static [Builtin] = &[
             const {out:out} = 1;
             "
         ),
-        brachet_handlers: &[],
+        bracket_handlers: &[],
     },
 ];
 
@@ -149,7 +149,7 @@ fn transpile_program(
 
         fragment::write_fragment(output, builtin.template, &mut stack, &local_vars)?;
 
-        for bracket_handler in builtin.brachet_handlers.iter().rev() {
+        for bracket_handler in builtin.bracket_handlers.iter().rev() {
             stack.push_group(
                 local_vars.clone(),
                 bracket_handler.fragment,
@@ -169,6 +169,8 @@ fn main() {
     let mut chars = program.chars();
 
     let mut writer = OutputWriter::new(std::io::stdout());
+    println!("(()=>{{");
     transpile_program(&mut chars, &mut writer).unwrap();
     println!();
+    println!("}})()");
 }

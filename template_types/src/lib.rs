@@ -92,9 +92,8 @@ pub struct ProgramFragment<'a> {
 impl<'a> ProgramFragment<'a> {
     pub fn get_local_var_names(&self) -> impl Iterator<Item = &'a str> {
         self.init_tokens
-            .iter()
-            .chain(self.destruct_tokens.iter())
-            .flat_map(|k| k.get_local_var_names())
+            .get_local_var_names()
+            .chain(self.destruct_tokens.get_local_var_names())
     }
 }
 
@@ -120,5 +119,40 @@ impl<'a> ToTokens for ProgramFragment<'a> {
                 arguments_popped: #arguments_popped
             }
         })
+    }
+}
+
+pub trait HighestVarNumbers<'a> {
+    fn get_number_of_input_vars(&self) -> usize;
+    #[allow(unused)]
+    fn get_number_of_output_vars(&self) -> usize;
+    fn get_local_var_names(&self) -> impl Iterator<Item = &'a str>;
+}
+
+impl<'a> HighestVarNumbers<'a> for [TemplateToken<'a>] {
+    fn get_number_of_input_vars(&self) -> usize {
+        self.into_iter()
+            .flat_map(|k| match k {
+                TemplateToken::InVar(n) => Some(n),
+                _ => None,
+            })
+            .max()
+            .map(|d| d + 1)
+            .unwrap_or(0)
+    }
+
+    fn get_number_of_output_vars(&self) -> usize {
+        self.into_iter()
+            .flat_map(|k| match k {
+                TemplateToken::OutVar(n) => Some(n),
+                _ => None,
+            })
+            .max()
+            .map(|d| d + 1)
+            .unwrap_or(0)
+    }
+
+    fn get_local_var_names(&self) -> impl Iterator<Item = &'a str> {
+        self.into_iter().flat_map(|d| d.get_local_var_names())
     }
 }

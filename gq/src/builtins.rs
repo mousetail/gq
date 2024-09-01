@@ -4,7 +4,7 @@ use crate::builtin::{BracketHandler, Builtin, MultiOutputBehavior, OutputHandler
 
 pub const BUILTINS: &'static [Builtin] = &[
     Builtin {
-        token: ',',
+        token: '(',
         template: fragment!(
             "
             const {wrapper:local} = () => {{
@@ -90,6 +90,15 @@ pub const BUILTINS: &'static [Builtin] = &[
         template: fragment!(
             "
             const {out:out} = 1;
+            "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        token: '5',
+        template: fragment!(
+            "
+            const {out:out} = 5;
             "
         ),
         bracket_handlers: &[],

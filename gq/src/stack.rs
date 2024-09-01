@@ -1,4 +1,7 @@
-use std::{collections::HashMap, iter::once};
+use std::{
+    collections::HashMap,
+    iter::once,
+};
 
 use template_types::{Output, ProgramFragment, TemplateToken};
 
@@ -16,6 +19,14 @@ pub struct StackBracketGroup {
 
     pub destructors: Vec<Destructor>,
     pub stack: Vec<String>,
+}
+
+impl StackBracketGroup {
+    pub fn get_output_handler_context(&self) -> Option<(&OutputHandler, &HashMap<String, String>)> {
+        self.output_handler
+            .as_ref()
+            .map(|output_handler| (output_handler, &self.local_variables))
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -97,8 +108,35 @@ impl Stack {
         self.var_names.next().unwrap()
     }
 
-    pub fn output_handlers(&self) -> impl Iterator<Item = Option<OutputHandler>> + '_ {
-        once(self.current_group.output_handler.clone())
-            .chain((&self.frames).into_iter().map(|k| k.output_handler))
+    pub fn get_output_handler(&self) -> (&OutputHandler, &HashMap<String, String>) {
+        let handler = once(&self.current_group)
+            .chain(self.frames.iter().rev())
+            .flat_map(StackBracketGroup::get_output_handler_context)
+            .next()
+            .unwrap();
+
+        return handler;
+    }
+
+    pub fn destruct_unused_vars(&mut self) -> Vec<Destructor> {
+        let mut number_of_orphaned_stack_frames = 0;
+
+        for item in self.current_group.destructors.iter().rev() {
+            if item
+                .out_vars
+                .iter()
+                .any(|out_var| self.current_group.stack.contains(out_var))
+            {
+                break;
+            }
+            number_of_orphaned_stack_frames += 1;
+        }
+
+        let split_off_values = self
+            .current_group
+            .destructors
+            .split_off(self.current_group.destructors.len() - number_of_orphaned_stack_frames);
+
+        split_off_values
     }
 }

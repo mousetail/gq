@@ -5,7 +5,7 @@ use crate::{
     output_writer::OutputWriter,
     stack::{Stack, StackBracketGroup},
 };
-use std::{collections::HashMap, io::Write, iter::once};
+use std::{collections::HashMap, io::Write};
 
 pub fn write_fragment(
     output: &mut OutputWriter<impl Write>,
@@ -46,7 +46,7 @@ pub struct Destructor {
     pub out_vars: Vec<String>,
 }
 
-pub fn write_output_handler(
+fn write_output_handler(
     output: &mut OutputWriter<impl Write>,
     handler: &'static [TemplateToken],
     input_vars: &[String],
@@ -70,7 +70,7 @@ pub fn write_output_handler(
 
 pub fn handle_group_output(
     output: &mut OutputWriter<impl Write>,
-    handler: OutputHandler,
+    handler: &OutputHandler,
     input_vars: &[String],
     local_vars: &HashMap<String, String>,
 ) -> std::io::Result<()> {
@@ -111,16 +111,11 @@ pub fn dispose_bracket_handler(
     bracket_handler: StackBracketGroup,
     stack: &mut Stack,
 ) -> std::io::Result<()> {
-    handle_group_output(
-        output,
-        once(bracket_handler.output_handler)
-            .chain(stack.output_handlers())
-            .flatten()
-            .next()
-            .unwrap(),
-        &bracket_handler.stack,
-        &bracket_handler.local_variables,
-    )?;
+    let (output_handler, local_vars) = bracket_handler
+        .get_output_handler_context()
+        .unwrap_or_else(|| stack.get_output_handler());
+
+    handle_group_output(output, output_handler, &bracket_handler.stack, local_vars)?;
 
     for destructor in bracket_handler.destructors.iter().rev() {
         write_tokens(
@@ -162,6 +157,40 @@ pub fn write_tokens(
                 output.write(Output::String(local_vars.get(n).unwrap().as_str()))?
             }
         }
+    }
+
+    Ok(())
+}
+
+pub fn write_comma(
+    output: &mut OutputWriter<impl Write>,
+    stack: &mut Stack,
+) -> std::io::Result<()> {
+    let (output_handler, _local_vars) = stack.get_output_handler();
+    let number_of_inputs = output_handler.fragment.get_number_of_input_vars();
+
+    let mut stack_values: Vec<_> = (0..number_of_inputs).map(|_| stack.pop()).collect();
+    stack_values.reverse();
+
+    // Need to call this twice since I can't borrow accross the two stack values calls
+    let (output_handler, local_vars) = stack.get_output_handler();
+
+    write_tokens(
+        output,
+        output_handler.fragment,
+        local_vars,
+        &stack_values,
+        &[],
+    )?;
+
+    for destructor in stack.destruct_unused_vars().iter().rev() {
+        write_tokens(
+            output,
+            destructor.fragments,
+            &destructor.local_vars,
+            &destructor.in_vars,
+            &destructor.out_vars,
+        )?;
     }
 
     Ok(())

@@ -1,7 +1,7 @@
 use std::{collections::HashMap, io::Write, iter::Peekable};
 
 use builtins::BUILTINS;
-use fragment::dispose_bracket_handler;
+use fragment::{dispose_bracket_handler, write_comma};
 use stack::Stack;
 
 mod builtin;
@@ -24,6 +24,11 @@ fn transpile_program(
 
             fragment::dispose_bracket_handler(output, bracket_handler, &mut stack)?;
 
+            continue;
+        }
+
+        if char == ',' {
+            write_comma(output, &mut stack)?;
             continue;
         }
 
@@ -52,7 +57,7 @@ fn transpile_program(
 
 fn main() {
     //let program = "11+r[,,1+1+r]1]]";
-    let program = "111++r,11]";
+    let program = "(5r,1]";
 
     let mut chars = program.chars().peekable();
 

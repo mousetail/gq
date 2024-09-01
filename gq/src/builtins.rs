@@ -65,6 +65,54 @@ pub const BUILTINS: &'static [Builtin] = &[
         ],
     },
     Builtin {
+        token: '?',
+        template: fragment!(
+            "
+            const { condition:local } = {condition_var:in};
+
+            const {if_true:local} = ()=>{{
+                {inner}
+            "
+        ),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: None,
+                fragment: fragment!(
+                    "
+                    //
+                }}
+                const {if_false:local} = ()=>{{
+                    {inner}
+                }}
+                "
+                ),
+            },
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!(
+                        "
+                        {inner:local}({value:in})
+                        "
+                    ),
+                    behavior: MultiOutputBehavior::FlattenAll,
+                }),
+                fragment: fragment!(
+                    "
+                    const {inner:local} = ({value:out}) => {{
+                        {inner}
+                    }}
+
+                    if ({condition:local}) {{
+                        {if_true:local}();
+                    }} else {{
+                        {if_false:local}();
+                    }}
+                "
+                ),
+            },
+        ],
+    },
+    Builtin {
         token: 'r',
         template: fragment!(
             "

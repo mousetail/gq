@@ -57,7 +57,7 @@ fn transpile_program(
 
 fn main() {
     //let program = "11+r[,,1+1+r]1]]";
-    let program = "(5r,1]";
+    let program = "1?1]5]";
 
     let mut chars = program.chars().peekable();
 

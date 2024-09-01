@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    iter::once,
-};
+use std::{collections::HashMap, iter::once};
 
 use template_types::{Output, ProgramFragment, TemplateToken};
 

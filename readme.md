@@ -9,9 +9,10 @@ Builtins I need:
  - [ ] Index
  - [ ] Range
  - [ ] Reshape
+ - [ ] Transpose
 
 # Generic
- - [ ] Comma
+ - [ ] Comma - Yields the values from both it's arguments seperately
 
 # Generator Related
  - [ ] Reduce - Runs on every pair and outputs a single value
@@ -54,3 +55,9 @@ Builtins I need:
 - [ ] Store - Push a value to the secondary stack
 - [ ] Peek - Copies the top of the secondary stack
 - [ ] Unstore - Pops the value of the secondary stack
+
+# Thoughts on Special Cases
+"," should be repeatable to take any number of arguments
+"?" should be able to output any number of arguments
+"!" should not pop arguments from the stack
+"branch" should take any number of arguments.

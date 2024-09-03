@@ -1,5 +1,42 @@
 <!DOCTYPE html>
 <html>
+<style>
+body {
+    font-family: sans-serif;
+}
+
+.hidden {
+    display: none;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.double-width {
+    width: 40rem;
+}
+
+td, th {
+    vertical-align: top;
+}
+
+.red {
+    background-color: #ff8888;
+}
+
+.green {
+    background-color: #88ff00;
+}
+
+pre {
+    margin: 0;
+}
+
+
+</style>
 <head>
 </head>
 <body>
@@ -10,6 +47,9 @@
         </th>
         <th>
         Code
+        </th>
+        <th class="double-width">
+        Compiled
         </th>
         <th>
         Test Case
@@ -25,29 +65,57 @@
 <script>
     (async ()=>{
         const table = document.querySelector('#test-cases');
+        table.replaceChildren(table.firstElementChild);
 
-        function html (tag, text, attrs) {
+        function html (tag, text, attrs = {}, chidlren = []) {
             const elem = document.createElement(tag);
             elem.textContent = text;
 
             for (const [attr, value] of Object.entries(attrs ?? {})) {
                 elem.setAttribute(attr, value);
             }
+
+            elem.replaceChildren(text, ...chidlren);
             return elem;
         }
 
+        function compiled(code, rowSpan) {
+            const td = html('td', "", {rowSpan: rowSpan});
+
+            const showHideButton = html('button', 'show/hide');
+            const pre = html('pre', code, {'class': 'hidden'});
+
+            td.replaceChildren(
+                showHideButton,
+                pre
+            )
+
+            showHideButton.addEventListener('click', ()=>{
+                pre.classList.toggle('hidden');
+            });
+
+            return td
+
+        }
+
         function test_case_row(test_case, code) {
-            const output =  html('td', '');
+            const output =  html('pre', '');
             code(
                 (value)=>{
                     output.appendChild(document.createTextNode(value))
                 },
                 JSON.parse(test_case.input)
             );
+
+            let className = test_case.output == output.innerText ? 'green' : 'red';
             return [
-                html('td', test_case.input),
-                html('td', test_case.output),
-               output
+                html('td', "", {"class":className}, [
+                    html('pre', test_case.input)
+                ]),
+                html('td', "", {"class":className}, [
+                    html('pre', test_case.output)
+                ]),
+                html('td', '', {"class":className}, [output])
             ]
         }
 
@@ -62,7 +130,10 @@
 
             row.replaceChildren(
                 html('td', test_case.name, {rowSpan: test_case.test_cases.length}),
-                html('td', test_case.code, {rowSpan: test_case.test_cases.length}),
+                html('td', "", {rowSpan: test_case.test_cases.length}, [
+                    html('pre', test_case.code)
+                ]),
+                compiled(test_case.transpiled_code, test_case.test_cases.length),
                 ...test_case_row(test_case.test_cases[0], evaled_code)
             );
             for (const sub_test_case of test_case.test_cases.slice(1)) {

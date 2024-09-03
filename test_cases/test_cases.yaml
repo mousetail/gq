@@ -3,5 +3,3 @@
   test_cases:
     - input: "null"
       output: 2
-    - input: "null"
-      output: 2

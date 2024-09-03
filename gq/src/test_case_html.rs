@@ -51,6 +51,7 @@ pub fn gen_test_case_html() -> std::io::Result<()> {
     let output_file = OpenOptions::new()
         .create(true)
         .write(true)
+        .truncate(true)
         .open("test_cases/result.json")?;
     serde_json::to_writer(output_file, &test_results).unwrap();
 

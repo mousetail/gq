@@ -1,6 +1,6 @@
 use template_macros::{fragment, half_fragment};
 
-use crate::builtin::{BracketHandler, Builtin, MultiOutputBehavior, OutputHandler};
+use crate::language::builtin::{BracketHandler, Builtin, MultiOutputBehavior, OutputHandler};
 
 pub const BUILTINS: &'static [Builtin] = &[
     Builtin {
@@ -127,9 +127,39 @@ pub const BUILTINS: &'static [Builtin] = &[
         token: '+',
         template: fragment!(
             "
-            const {out:out} = {op1:in} + {op2:in};
+            const {out:out} = add({op1:in}, {op2:in});
             { inner }
         "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        token: '-',
+        template: fragment!(
+            "
+            const {out:out} = sub({op1:in}, {op2:in});
+            { inner }
+        "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        token: '*',
+        template: fragment!(
+            "
+            const {out:out} = mul({op1:in}, {op2:in});
+            { inner }
+        "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        token: '/',
+        template: fragment!(
+            "
+            const {out:out} = div({op1:in}, {op2:in});
+            { inner }
+            "
         ),
         bracket_handlers: &[],
     },

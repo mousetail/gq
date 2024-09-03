@@ -29,6 +29,7 @@ Builtins I need:
  - [ ] subtraction  (on arrays removes)
  - [ ] multiplication (on arrays join)
  - [ ] division (on arrays split)
+ - [ ] floor
 
  # String Related
 
@@ -42,6 +43,8 @@ Builtins I need:
 # Constants
 - [ ] 0-9
 - [ ] String Literals
+- [ ] Empty
+- [ ] Empty Array
 
 # Control Flow
 - [ ] If/Then/Else - Needs special casing to handle multiple output values

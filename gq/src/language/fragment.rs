@@ -1,6 +1,6 @@
 use template_types::{HighestVarNumbers, Output, ProgramFragment, TemplateToken};
 
-use crate::{
+use crate::language::{
     builtin::OutputHandler,
     output_writer::OutputWriter,
     stack::{Stack, StackBracketGroup},
@@ -77,7 +77,7 @@ pub fn handle_group_output(
     let number_of_input_vars = handler.fragment.get_number_of_input_vars();
 
     match handler.behavior {
-        crate::builtin::MultiOutputBehavior::OnlyFirst => {
+        crate::language::builtin::MultiOutputBehavior::OnlyFirst => {
             if number_of_input_vars > input_vars.len() {
                 panic!(
                     "This group requires at least {number_of_input_vars} values left on the stack"
@@ -90,7 +90,7 @@ pub fn handle_group_output(
                 local_vars,
             )?
         }
-        crate::builtin::MultiOutputBehavior::FlattenAll => {
+        crate::language::builtin::MultiOutputBehavior::FlattenAll => {
             assert_eq!(
                 number_of_input_vars, 1,
                 "Flatten all can only be used with a single input var"

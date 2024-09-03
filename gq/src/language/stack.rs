@@ -2,7 +2,7 @@ use std::{collections::HashMap, iter::once};
 
 use template_types::{Output, ProgramFragment, TemplateToken};
 
-use crate::{
+use crate::language::{
     builtin::{MultiOutputBehavior, OutputHandler},
     fragment::Destructor,
     varnames::VarNames,
@@ -35,7 +35,7 @@ pub struct Stack {
 
 const DEFAULT_OUTPUT_HANDLER: OutputHandler = OutputHandler {
     fragment: &[
-        TemplateToken::str("console.log("),
+        TemplateToken::str("output("),
         TemplateToken::InVar(0),
         TemplateToken::str(");"),
         TemplateToken::String(Output::NewLine),

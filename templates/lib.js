@@ -216,6 +216,19 @@ const generator_index = (idx, callback) => {
 
         return typeof idx == 'number' ? expected_outputs.get(floored_index[0]) : floored_index.map((d) => expected_outputs.get(d));
     }
+}
 
+const array_zip = (a, b) => {
+    return new Array(Math.min(a.length, b.length)).fill(0).map((_e, i) => {
+        return [a[i], b[i]];
+    });
+}
 
+function* generator_zip(cb_1, cb_2) {
+    let iterators = [cb_1, cb_2].map(i => i()[Symbol.iterator]());
+    while (true) {
+        let results = iterators.map(iter => iter.next())
+        if (results.some(res => res.done)) return
+        else yield results.flatMap(res => res.value)
+    }
 }

@@ -34,9 +34,8 @@ td, th {
 
 pre {
     margin: 0;
+    white-space: pre-wrap;  
 }
-
-
 </style>
 <head>
 </head>
@@ -110,7 +109,7 @@ pre {
                     ...test_case.input.toReversed()
                 );
             } catch (e) {
-                output.appendChild(document.createTextNode(e.message));
+                output.appendChild(document.createTextNode(e.message + ' '+e.fileName+' '+e.lineNumber));
             }
 
             let expected_output_text = test_case.output.map(t=>JSON.stringify(t)+'\n').join('')

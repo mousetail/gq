@@ -4,10 +4,10 @@ Builtins I need:
 
  - [x] Array Wrap
  - [x] Array Unwrap
- - [ ] Zip
+ - [x] Zip
  - [x] Sum
  - [x] Index
- - [ ] Range
+ - [x] Range
  - [ ] Reshape
  - [ ] Transpose
 

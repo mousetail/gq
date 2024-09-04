@@ -354,3 +354,34 @@
         - [-1, 0]
       output:
         - [3.5, 1.5]
+- name: "Generator Zip"
+  code: "Z5r]3r2]+"
+  test_cases:
+    - input: []
+      output: [0, 2, 1, 3, 2, 4]
+- name: "Array Zip"
+  code: "z"
+  test_cases:
+    - input:
+        - [1, 2, 3, 4, 5]
+        - [null, 17]
+      output:
+        - [[1, null], [2, 17]]
+    - input:
+        - [null, 17]
+        - [1, 2, 3, 4, 5]
+      output:
+        - [[null, 1], [17, 2]]
+    - input:
+        - "boredom"
+        - "camoflage"
+      output:
+        - [
+            ["b", "c"],
+            ["o", "a"],
+            ["r", "m"],
+            ["e", "o"],
+            ["d", "f"],
+            ["o", "l"],
+            ["m", "a"],
+          ]

@@ -8,6 +8,7 @@ pub enum MultiOutputBehavior {
     #[allow(unused)]
     Array,
     Variadic,
+    HalfZip,
 }
 
 #[derive(Debug, Clone, Copy)]

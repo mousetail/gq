@@ -368,5 +368,55 @@ pub const BUILTINS: &'static [Builtin] = &[
                 ")
             }
         ]
+    },
+    Builtin {
+        name: "Array Zip",
+        description: "Takes one element from each array",
+        token: 'z',
+        template: fragment!("
+            {out:out} = array_zip({a:in}, {b:in});
+        "),
+        bracket_handlers: &[]
+    },
+    Builtin {
+        name: "Iterator Zip",
+        description: "Takes one element each from every frame of the generator",
+        token: 'Z',
+        template: fragment!("
+            for ({var:local} of generator_zip(function* () {{
+                {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        yield [{value:in}];
+                    "),
+                    behavior: MultiOutputBehavior::HalfZip
+                }),
+                fragment: fragment!("
+                            //
+                        }},
+                        function* () {{
+                            {inner}
+                ")
+            },
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        yield [{value:in}];
+                    "),
+                    behavior: MultiOutputBehavior::Variadic
+                }),
+                fragment: fragment!("
+                            //
+                        }},
+                    )) {{
+                        const [{it_var:out}] = {var:local};
+                        {inner}
+                    }}
+                ")
+            },
+        ]
     }
 ];

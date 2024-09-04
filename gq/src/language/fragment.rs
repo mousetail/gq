@@ -143,8 +143,9 @@ pub fn handle_group_output(
                 )?;
             }
         }
-        crate::language::builtin::MultiOutputBehavior::Array
-        | crate::language::builtin::MultiOutputBehavior::Variadic => {
+        MultiOutputBehavior::Array
+        | MultiOutputBehavior::Variadic
+        | MultiOutputBehavior::HalfZip => {
             assert_eq!(
                 number_of_input_vars, 1,
                 "Array all can only be used with a single input var"
@@ -193,6 +194,21 @@ pub fn dispose_bracket_handler(
     if let Some(OutputHandlerInstance {
         inner:
             OutputHandler {
+                behavior: MultiOutputBehavior::HalfZip,
+                ..
+            },
+        ..
+    }) = bracket_handler.output_handler
+    {
+        let (parent_output_handler, _) = stack.get_output_handler();
+        parent_output_handler
+            .child_variadic_outputs
+            .set(output_handler.max_variadic_outputs.get());
+    }
+
+    if let Some(OutputHandlerInstance {
+        inner:
+            OutputHandler {
                 behavior: MultiOutputBehavior::Variadic,
                 ..
             },
@@ -204,7 +220,8 @@ pub fn dispose_bracket_handler(
             bracket_handler.brackent_end_fragment,
             stack,
             &bracket_handler.local_variables,
-            output_handler.max_variadic_outputs.get().unwrap_or(0),
+            output_handler.max_variadic_outputs.get().unwrap_or(0)
+                + output_handler.child_variadic_outputs.get().unwrap_or(0),
         )?;
     } else {
         write_fragment(

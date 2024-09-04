@@ -12,6 +12,7 @@ use crate::language::{
 pub struct OutputHandlerInstance {
     pub inner: OutputHandler,
     pub max_variadic_outputs: Cell<Option<usize>>,
+    pub child_variadic_outputs: Cell<Option<usize>>,
 }
 
 #[derive(Clone, Debug)]
@@ -63,6 +64,7 @@ impl Stack {
                 output_handler: Some(OutputHandlerInstance {
                     inner: DEFAULT_OUTPUT_HANDLER,
                     max_variadic_outputs: Cell::new(None),
+                    child_variadic_outputs: Cell::new(None),
                 }),
                 destructors: vec![],
                 stack: vec![],
@@ -110,6 +112,7 @@ impl Stack {
                 output_handler: output_handler.map(|output_handler| OutputHandlerInstance {
                     inner: output_handler,
                     max_variadic_outputs: Cell::new(None),
+                    child_variadic_outputs: Cell::new(None),
                 }),
             },
         ));

@@ -101,12 +101,17 @@ pre {
 
         function test_case_row(test_case, code) {
             const output =  html('pre', '');
-            code(
-                (value)=>{
-                    output.appendChild(document.createTextNode(JSON.stringify(value)+'\n'))
-                },
-                ...test_case.input
-            );
+
+            try {
+                code(
+                    (value)=>{
+                        output.appendChild(document.createTextNode(JSON.stringify(value)+'\n'))
+                    },
+                    ...test_case.input
+                );
+            } catch (e) {
+                output.appendChild(document.createTextNode(e.message));
+            }
 
             let expected_output_text = test_case.output.map(t=>JSON.stringify(t)+'\n').join('')
 
@@ -129,7 +134,12 @@ pre {
             let row = document.createElement('tr');
             table.appendChild(row);
 
-            let evaled_code = eval(test_case.transpiled_code);
+            let evaled_code;
+            try {
+                evaled_code = eval(test_case.transpiled_code);
+            } catch (err){
+                evaled_code = (output)=>output(err.message)
+            }
 
             row.replaceChildren(
                 html('td', test_case.name, {rowSpan: test_case.test_cases.length}),

@@ -196,6 +196,52 @@
         - "abc"
       output:
         - 1
+- name: "Test Variadic If"
+  code: "?1 2]3 7]-"
+  test_cases:
+    - input:
+        - 0
+      output:
+        - 4
+    - input:
+        - 1
+      output:
+        - 1
+- name: "Test Asymetric"
+  code: "?2]3 7]+"
+  test_cases:
+    - input:
+        - 0
+      output:
+        - 10
+    - input:
+        - 1
+      output:
+        - 2
+- name: "Test Reverse"
+  code: "?3 7]2]+"
+  test_cases:
+    - input:
+        - 0
+      output:
+        - 2
+    - input:
+        - 1
+      output:
+        - 10
+- name: "Test Asymetric No Reduce"
+  code: "?2]3 7]"
+  test_cases:
+    - input:
+        - 0
+      output:
+        - 3
+        - 7
+    - input:
+        - 1
+      output:
+        - 2
+        - null
 - name: "Test Swap"
   code: "1 2 3$"
   test_cases:
@@ -242,3 +288,23 @@
         - 1
         - 2
         - [3, 4, 3]
+- name: "Test Reduce"
+  code: 0R4r]+]
+  test_cases:
+    - input: []
+      output:
+        - 6
+- name: "Test Array Sum"
+  code: s
+  test_cases:
+    - input:
+        - ["abc", 1, 2, [], null]
+      output:
+        - "abc12[]"
+- name: "Test Iterator Sum"
+  code: Su]
+  test_cases:
+    - input:
+        - ["abc", 1, 2, [], null]
+      output:
+        - "abc12[]"

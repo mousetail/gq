@@ -5,7 +5,7 @@ Builtins I need:
  - [x] Array Wrap
  - [x] Array Unwrap
  - [ ] Zip
- - [ ] Sum
+ - [x] Sum
  - [ ] Index
  - [ ] Range
  - [ ] Reshape
@@ -15,7 +15,7 @@ Builtins I need:
  - [x] Comma - Yields the values from both it's arguments seperately
 
 # Generator Related
- - [ ] Reduce - Runs on every pair and outputs a single value
+ - [x] Reduce - Runs on every pair and outputs a single value
  - [ ] Scan - Like reduce but outputs every intmediate value
  - [ ] First
  - [ ] Last

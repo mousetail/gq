@@ -7,6 +7,43 @@ use crate::language::{
 };
 use std::{collections::HashMap, io::Write};
 
+use super::{builtin::MultiOutputBehavior, stack::OutputHandlerInstance};
+
+pub fn write_variadic_fragment(
+    output: &mut OutputWriter<impl Write>,
+    fragment: ProgramFragment<'static>,
+    stack: &mut Stack,
+    local_vars: &HashMap<String, String>,
+    outputs: usize,
+) -> std::io::Result<()> {
+    let in_vars: Vec<_> = (0..fragment.arguments_popped)
+        .map(|_| stack.pop())
+        .collect();
+
+    assert_eq!(
+        fragment.arguments_pushed, 1,
+        "Variadic fragments can only push one argument"
+    );
+    let out_vars: Vec<_> = (0..outputs).map(|_| stack.push()).collect();
+
+    write_tokens(
+        output,
+        fragment.init_tokens,
+        local_vars,
+        &in_vars,
+        &[out_vars.join(", ")],
+    )?;
+
+    stack.current_group.destructors.push(Destructor {
+        fragments: fragment.destruct_tokens,
+        in_vars,
+        out_vars,
+        local_vars: local_vars.clone(),
+    });
+
+    Ok(())
+}
+
 pub fn write_fragment(
     output: &mut OutputWriter<impl Write>,
     fragment: ProgramFragment<'static>,
@@ -70,13 +107,13 @@ fn write_output_handler(
 
 pub fn handle_group_output(
     output: &mut OutputWriter<impl Write>,
-    handler: &OutputHandler,
+    handler: &OutputHandlerInstance,
     input_vars: &[String],
     local_vars: &HashMap<String, String>,
 ) -> std::io::Result<()> {
-    let number_of_input_vars = handler.fragment.get_number_of_input_vars();
+    let number_of_input_vars = handler.inner.fragment.get_number_of_input_vars();
 
-    match handler.behavior {
+    match handler.inner.behavior {
         crate::language::builtin::MultiOutputBehavior::OnlyFirst => {
             if number_of_input_vars > input_vars.len() {
                 panic!(
@@ -85,7 +122,7 @@ pub fn handle_group_output(
             }
             write_output_handler(
                 output,
-                handler.fragment,
+                handler.inner.fragment,
                 &input_vars[..number_of_input_vars],
                 local_vars,
             )?
@@ -97,10 +134,35 @@ pub fn handle_group_output(
             );
 
             for i in 0..input_vars.len() {
-                write_output_handler(output, handler.fragment, &input_vars[i..i + 1], local_vars)?;
+                write_output_handler(
+                    output,
+                    handler.inner.fragment,
+                    &input_vars[i..i + 1],
+                    local_vars,
+                )?;
             }
-        } // crate::builtin::MultiOutputBehavior::Array => todo!(),
-          // crate::builtin::MultiOutputBehavior::Variadic => todo!(),
+        }
+        crate::language::builtin::MultiOutputBehavior::Array
+        | crate::language::builtin::MultiOutputBehavior::Variadic => {
+            assert_eq!(
+                number_of_input_vars, 1,
+                "Array all can only be used with a single input var"
+            );
+
+            handler.max_variadic_outputs.set(
+                handler
+                    .max_variadic_outputs
+                    .get()
+                    .max(Some(input_vars.len())),
+            );
+
+            write_output_handler(
+                output,
+                handler.inner.fragment,
+                &[input_vars.join(", ")],
+                local_vars,
+            )?;
+        }
     }
 
     Ok(())
@@ -127,12 +189,30 @@ pub fn dispose_bracket_handler(
         )?;
     }
 
-    write_fragment(
-        output,
-        bracket_handler.brackent_end_fragment,
-        stack,
-        &bracket_handler.local_variables,
-    )?;
+    if let Some(OutputHandlerInstance {
+        inner:
+            OutputHandler {
+                behavior: MultiOutputBehavior::Variadic,
+                ..
+            },
+        ..
+    }) = bracket_handler.output_handler
+    {
+        write_variadic_fragment(
+            output,
+            bracket_handler.brackent_end_fragment,
+            stack,
+            &bracket_handler.local_variables,
+            output_handler.max_variadic_outputs.get().unwrap_or(0),
+        )?;
+    } else {
+        write_fragment(
+            output,
+            bracket_handler.brackent_end_fragment,
+            stack,
+            &bracket_handler.local_variables,
+        )?;
+    }
 
     Ok(())
 }
@@ -167,7 +247,7 @@ pub fn write_comma(
     stack: &mut Stack,
 ) -> std::io::Result<()> {
     let (output_handler, _local_vars) = stack.get_output_handler();
-    let number_of_inputs = output_handler.fragment.get_number_of_input_vars();
+    let number_of_inputs = output_handler.inner.fragment.get_number_of_input_vars();
 
     let mut stack_values: Vec<_> = (0..number_of_inputs).map(|_| stack.pop()).collect();
     stack_values.reverse();
@@ -177,7 +257,7 @@ pub fn write_comma(
 
     write_tokens(
         output,
-        output_handler.fragment,
+        output_handler.inner.fragment,
         local_vars,
         &stack_values,
         &[],

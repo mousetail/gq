@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter::once};
+use std::{cell::Cell, collections::HashMap, iter::once};
 
 use template_types::{Output, ProgramFragment, TemplateToken};
 
@@ -9,17 +9,25 @@ use crate::language::{
 };
 
 #[derive(Clone, Debug)]
+pub struct OutputHandlerInstance {
+    pub inner: OutputHandler,
+    pub max_variadic_outputs: Cell<Option<usize>>,
+}
+
+#[derive(Clone, Debug)]
 pub struct StackBracketGroup {
     pub brackent_end_fragment: ProgramFragment<'static>,
     pub local_variables: HashMap<String, String>,
-    pub output_handler: Option<OutputHandler>,
+    pub output_handler: Option<OutputHandlerInstance>,
 
     pub destructors: Vec<Destructor>,
     pub stack: Vec<String>,
 }
 
 impl StackBracketGroup {
-    pub fn get_output_handler_context(&self) -> Option<(&OutputHandler, &HashMap<String, String>)> {
+    pub fn get_output_handler_context(
+        &self,
+    ) -> Option<(&OutputHandlerInstance, &HashMap<String, String>)> {
         self.output_handler
             .as_ref()
             .map(|output_handler| (output_handler, &self.local_variables))
@@ -38,7 +46,7 @@ const DEFAULT_OUTPUT_HANDLER: OutputHandler = OutputHandler {
     fragment: &[
         TemplateToken::str("output("),
         TemplateToken::InVar(0),
-        TemplateToken::str(");"),
+        TemplateToken::str("?? null);"),
         TemplateToken::String(Output::NewLine),
     ],
     behavior: MultiOutputBehavior::FlattenAll,
@@ -52,7 +60,10 @@ impl Stack {
             current_group: StackBracketGroup {
                 brackent_end_fragment: ProgramFragment::default(),
                 local_variables: HashMap::new(),
-                output_handler: Some(DEFAULT_OUTPUT_HANDLER),
+                output_handler: Some(OutputHandlerInstance {
+                    inner: DEFAULT_OUTPUT_HANDLER,
+                    max_variadic_outputs: Cell::new(None),
+                }),
                 destructors: vec![],
                 stack: vec![],
             },
@@ -96,7 +107,10 @@ impl Stack {
                 local_variables: local_vars,
                 destructors: vec![],
                 stack: vec![],
-                output_handler,
+                output_handler: output_handler.map(|output_handler| OutputHandlerInstance {
+                    inner: output_handler,
+                    max_variadic_outputs: Cell::new(None),
+                }),
             },
         ));
     }
@@ -113,7 +127,7 @@ impl Stack {
         self.var_names.next().unwrap()
     }
 
-    pub fn get_output_handler(&self) -> (&OutputHandler, &HashMap<String, String>) {
+    pub fn get_output_handler(&self) -> (&OutputHandlerInstance, &HashMap<String, String>) {
         let handler = once(&self.current_group)
             .chain(self.frames.iter().rev())
             .flat_map(StackBracketGroup::get_output_handler_context)

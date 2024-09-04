@@ -5,8 +5,9 @@ pub enum MultiOutputBehavior {
     #[allow(unused)]
     OnlyFirst,
     FlattenAll,
-    // Array,
-    // Variadic,
+    #[allow(unused)]
+    Array,
+    Variadic,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -33,6 +34,8 @@ impl BracketHandler {
 
 #[derive(Default, Debug)]
 pub struct Builtin {
+    pub name: &'static str,
+    pub description: &'static str,
     pub token: char,
     pub template: ProgramFragment<'static>,
     pub bracket_handlers: &'static [BracketHandler],

@@ -6,8 +6,8 @@ use crate::language::transpile_program;
 
 #[derive(Deserialize, Serialize)]
 struct SubTestCase {
-    input: String,
-    output: String,
+    input: serde_json::Value,
+    output: serde_json::Value,
 }
 
 #[derive(Deserialize)]

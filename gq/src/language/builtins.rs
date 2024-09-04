@@ -164,6 +164,16 @@ pub const BUILTINS: &'static [Builtin] = &[
         bracket_handlers: &[],
     },
     Builtin {
+        token: '=',
+        template: fragment!(
+            "
+            const {out:out} = eq({op1:in}, {op2:in});
+            { inner }
+            "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
         token: '1',
         template: fragment!(
             "

@@ -21,6 +21,7 @@ table {
 
 td, th {
     vertical-align: top;
+    padding: 0.5rem;
 }
 
 .red {
@@ -102,18 +103,20 @@ pre {
             const output =  html('pre', '');
             code(
                 (value)=>{
-                    output.appendChild(document.createTextNode(value))
+                    output.appendChild(document.createTextNode(JSON.stringify(value)+'\n'))
                 },
-                JSON.parse(test_case.input)
+                ...test_case.input
             );
 
-            let className = test_case.output == output.innerText ? 'green' : 'red';
+            let expected_output_text = test_case.output.map(t=>JSON.stringify(t)+'\n').join('')
+
+            let className = expected_output_text == output.innerText ? 'green' : 'red';
             return [
                 html('td', "", {"class":className}, [
-                    html('pre', test_case.input)
+                    html('pre', JSON.stringify(test_case.input))
                 ]),
                 html('td', "", {"class":className}, [
-                    html('pre', test_case.output)
+                    html('pre', expected_output_text)
                 ]),
                 html('td', '', {"class":className}, [output])
             ]

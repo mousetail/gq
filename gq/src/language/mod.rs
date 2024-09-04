@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write, iter::Peekable};
+use std::{collections::HashMap, io::Write};
 
 use builtins::BUILTINS;
 use fragment::{dispose_bracket_handler, write_comma};
@@ -18,7 +18,9 @@ pub fn transpile_program(
 ) -> std::io::Result<()> {
     let mut iter = iter.peekable();
     let mut output = OutputWriter::new(output);
-    output.write(template_types::Output::String("((output)=>{"))?;
+    output.write(template_types::Output::String("((output, ...args)=>{"))?;
+    output.write(template_types::Output::Indent)?;
+    output.write(template_types::Output::NewLine)?;
 
     let mut stack = Stack::new();
 
@@ -36,7 +38,10 @@ pub fn transpile_program(
             continue;
         }
 
-        let builtin = BUILTINS.iter().find(|d| d.token == char).unwrap();
+        let builtin = BUILTINS
+            .iter()
+            .find(|d| d.token == char)
+            .unwrap_or_else(|| panic!("Unexpected token {char}"));
 
         let local_vars: HashMap<_, _> = builtin
             .get_local_var_names()
@@ -56,6 +61,8 @@ pub fn transpile_program(
 
     dispose_bracket_handler(&mut output, stack.current_group.clone(), &mut stack)?;
 
+    output.write(template_types::Output::Dedent)?;
+    output.write(template_types::Output::NewLine)?;
     output.write(template_types::Output::String("})"))?;
 
     Ok(())

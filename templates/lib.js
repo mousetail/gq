@@ -31,7 +31,7 @@ const sub = (a, b) => {
     } else if (typeof a == 'object' && typeof b == 'object') {
         const copy = [...a];
         for (let i = 0; i < copy.length; i++) {
-            if (eq(copy.slice(i, b.length), b)) {
+            if (eq(copy.slice(i, i + b.length), b)) {
                 copy.splice(i, b.length);
                 i -= 1;
             }

@@ -31,6 +31,7 @@ pub struct Stack {
     frames: Vec<StackBracketGroup>,
     pub current_group: StackBracketGroup,
     var_names: VarNames,
+    inputs_used: usize,
 }
 
 const DEFAULT_OUTPUT_HANDLER: OutputHandler = OutputHandler {
@@ -55,6 +56,7 @@ impl Stack {
                 destructors: vec![],
                 stack: vec![],
             },
+            inputs_used: 0,
         }
     }
 
@@ -76,7 +78,9 @@ impl Stack {
             }
         }
 
-        panic!("Attempt to pop from empty stack")
+        let value = format!("args[{}]", self.inputs_used);
+        self.inputs_used += 1;
+        return value;
     }
 
     pub fn push_group(

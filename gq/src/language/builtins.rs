@@ -264,6 +264,17 @@ pub const BUILTINS: &'static [Builtin] = &[
         bracket_handlers: &[],
     },
     Builtin {
+        name: "Drop",
+        description: "Pop a value from the stack",
+        token: '~',
+        template: fragment!(
+            "
+            {value:in};
+            "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
         name: "Swap",
         description: "Pops two values from the stack then pushes them in reverse order",
         token: '$',

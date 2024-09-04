@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write};
+use std::{collections::HashMap, fs::OpenOptions, io::Write};
 
 use builtins::BUILTINS;
 use fragment::{dispose_bracket_handler, write_comma};
@@ -101,4 +101,59 @@ pub fn transpile_program(
     output.write(template_types::Output::String("})"))?;
 
     Ok(())
+}
+
+pub fn get_builtin_tokens() {
+    let tokens = BUILTINS
+        .iter()
+        .map(|k| (k.token, k.name))
+        .chain([(',', "comma"), (']', "end group"), ('"', "Start String")])
+        .collect::<Vec<_>>();
+
+    let mut first_column: Vec<_> = ('a'..='z').map(|k| k.to_string()).collect();
+    let mut second_column: Vec<_> = ('A'..='Z').map(|k| k.to_string()).collect();
+    let mut third_column = ('!'..='/')
+        .chain(':'..='@')
+        .chain('['..='`')
+        .chain('{'..='~')
+        .map(|k| k.to_string())
+        .collect();
+
+    for token in tokens {
+        let list = match token.0 {
+            'a'..='z' => &mut first_column,
+            'A'..='Z' => &mut second_column,
+            _ => &mut third_column,
+        };
+
+        let index = list
+            .iter()
+            .position(|d| d.chars().next() == Some(token.0))
+            .unwrap();
+        list[index] = format!("{} {}", token.0, token.1);
+    }
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open("available_letters.md")
+        .unwrap();
+
+    writeln!(file, "| Upper Case | Lower Case | Symbols |").unwrap();
+    writeln!(file, "| ---------- | ---------- | ------- |").unwrap();
+
+    for i in 0..(first_column
+        .len()
+        .max(second_column.len().max(third_column.len())))
+    {
+        writeln!(
+            file,
+            "| {} | {} | \\{} |",
+            first_column.get(i).map(String::as_str).unwrap_or(""),
+            second_column.get(i).map(String::as_str).unwrap_or(""),
+            third_column.get(i).map(String::as_str).unwrap_or(""),
+        )
+        .unwrap();
+    }
 }

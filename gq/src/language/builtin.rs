@@ -36,6 +36,7 @@ impl BracketHandler {
 #[derive(Default, Debug)]
 pub struct Builtin {
     pub name: &'static str,
+    #[allow(unused)]
     pub description: &'static str,
     pub token: char,
     pub template: ProgramFragment<'static>,

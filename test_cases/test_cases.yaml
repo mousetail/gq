@@ -197,7 +197,7 @@
       output:
         - 1
 - name: "Test Variadic If"
-  code: "?1 2]3 7]-"
+  code: "?2 1]7 3]-"
   test_cases:
     - input:
         - 0
@@ -308,3 +308,49 @@
         - ["abc", 1, 2, [], null]
       output:
         - "abc12[]"
+- name: "Test Index"
+  code: '[0,"1",2,3,4]$i'
+  test_cases:
+    - input:
+        - 0
+      output:
+        - 0
+    - input:
+        - 1
+      output:
+        - "1"
+    - input:
+        - [3, 1]
+      output:
+        - [3, "1"]
+    - input:
+        - -1
+      output:
+        - 4
+    - input:
+        - -3
+      output:
+        - 2
+    - input:
+        - -5
+      output:
+        - 0
+- name: "Generator Index"
+  code: "I5r3+2/]"
+  test_cases:
+    - input:
+        - 0
+      output:
+        - 1.5
+    - input:
+        - [1, 2]
+      output:
+        - [2, 2.5]
+    - input:
+        - -1
+      output:
+        - 3.5
+    - input:
+        - [-1, 0]
+      output:
+        - [3.5, 1.5]

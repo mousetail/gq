@@ -107,7 +107,7 @@ pre {
                     (value)=>{
                         output.appendChild(document.createTextNode(JSON.stringify(value)+'\n'))
                     },
-                    ...test_case.input
+                    ...test_case.input.toReversed()
                 );
             } catch (e) {
                 output.appendChild(document.createTextNode(e.message));

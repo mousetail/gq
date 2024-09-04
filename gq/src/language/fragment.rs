@@ -50,9 +50,10 @@ pub fn write_fragment(
     stack: &mut Stack,
     local_vars: &HashMap<String, String>,
 ) -> std::io::Result<()> {
-    let in_vars: Vec<_> = (0..fragment.arguments_popped)
+    let mut in_vars: Vec<_> = (0..fragment.arguments_popped)
         .map(|_| stack.pop())
         .collect();
+    in_vars.reverse();
     let out_vars: Vec<_> = (0..fragment.arguments_pushed)
         .map(|_| stack.push())
         .collect();

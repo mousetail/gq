@@ -2,7 +2,7 @@ use std::iter::Peekable;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use template_types::{Output, ProgramFragment, TemplateToken};
+use template_types::{HighestVarNumbers, Output, ProgramFragment, TemplateToken};
 
 fn index_or_new(items: &mut Vec<String>, name: &str) -> usize {
     if let Some(index) = items.iter().position(|k| k == name) {
@@ -115,8 +115,10 @@ fn half_parse<'a>(
                 .unwrap_or(0);
         return value;
     };
-    let wrap =
-        |value: &'a str| (!value.is_empty()).then(|| TemplateToken::String(Output::String(value)));
+    let wrap = |value: &'a str| {
+        (!value.is_empty() && !value.starts_with("//"))
+            .then(|| TemplateToken::String(Output::String(value)))
+    };
 
     while let Some((index, next_char)) = chars.next() {
         if in_substitution {

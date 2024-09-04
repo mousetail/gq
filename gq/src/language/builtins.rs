@@ -269,6 +269,7 @@ pub const BUILTINS: &'static [Builtin] = &[
         token: '$',
         template: fragment!(
             "
+            // {value2:in}
             const [{out1:out},{out2:out}] = [{value1:in},{value2:in}];
             {inner}
             "
@@ -281,7 +282,6 @@ pub const BUILTINS: &'static [Builtin] = &[
         token: '@',
         template: fragment!(
             "
-            // {value1:in}
             const [{out1:out},{out2:out},{out3:out}] = [{value2:in},{value1:in},{value2:in}];
             {inner}
             "
@@ -326,4 +326,47 @@ pub const BUILTINS: &'static [Builtin] = &[
             ),
         }],
     },
+    Builtin {
+        name: "Array Index",
+        description: "Gets the Nth element from a array",
+        token: 'i',
+        template: fragment!(
+            "
+            {out:out} = index({arr:in}, {index:in})
+            "
+        ),
+        bracket_handlers: &[]
+    },
+    Builtin {
+        name: "Generator Index",
+        description: "Gets the Nth element from a generator",
+        token: 'I',
+        template: fragment!(
+            "
+            const {result:local} = generator_index(
+                {index:in}, 
+                ({generate:local})=>{{
+                    {inner}
+            "
+        ),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                    if (({generate:local}({value:in}))) {{
+                        return {value:in}
+                    }}
+                    "),
+                    behavior: MultiOutputBehavior::FlattenAll
+                }),
+                fragment: fragment!("
+                            //
+                        }}
+                    )
+
+                    const {out:out} = {result:local};
+                ")
+            }
+        ]
+    }
 ];

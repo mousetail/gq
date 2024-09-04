@@ -6,7 +6,7 @@ Builtins I need:
  - [x] Array Unwrap
  - [ ] Zip
  - [x] Sum
- - [ ] Index
+ - [x] Index
  - [ ] Range
  - [ ] Reshape
  - [ ] Transpose

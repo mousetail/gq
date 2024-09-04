@@ -155,3 +155,67 @@ const to_bool = (param) => {
     }
     return param.length > 0
 }
+
+const index = (arr, idx) => {
+    let arr_iter = iter(arr);
+
+    if (typeof idx == 'number') {
+        idx = Math.floor(idx);
+        if (idx >= 0 && idx < arr_iter.length) {
+            return arr_iter[idx]
+        } else if (idx < 0 && idx >= - arr_iter.length) {
+            return arr_iter[arr_iter.length + idx];
+        } else {
+            return null;
+        }
+    }
+
+    else if (typeof idx == 'object') {
+        return idx.map(
+            (k) => index(arr_iter, k)
+        )
+    }
+}
+
+const generator_index = (idx, callback) => {
+    let floored_index = iter(idx).map((k) => Math.floor(k));
+    let any_negavive = floored_index.some((k) => k < 0);
+
+    if (any_negavive) {
+        let output = [];
+
+        callback((value) => {
+            output.push(value);
+            return false;
+        });
+
+        console.log(floored_index, output);
+
+        return index(output, idx);
+    } else {
+
+
+        let expected_outputs = new Map();
+        let generator_index = 0;
+
+        let expected_outputs_set = new Set(floored_index);
+
+        callback((value) => {
+            if (expected_outputs_set.has(generator_index)) {
+                expected_outputs.set(generator_index, value);
+            }
+
+            generator_index += 1;
+
+            if (expected_outputs.size == expected_outputs_set.size) {
+                return true
+            } else {
+                return false
+            }
+        });
+
+        return typeof idx == 'number' ? expected_outputs.get(floored_index[0]) : floored_index.map((d) => expected_outputs.get(d));
+    }
+
+
+}

@@ -114,6 +114,20 @@
         - 36
         - 1
         - 41242
+- name: "Test String Parsing"
+  code: "\"abc\" \"abc\\\"def\" \"\n\""
+  test_cases:
+    - input: []
+      output:
+        - "abc"
+        - 'abc"def'
+        - "\n"
+- name: "Test Unclosed"
+  code: '"abc \"def'
+  test_cases:
+    - input: []
+      output:
+        - 'abc "def'
 - name: "Test Array Wrap Range"
   code: "[5r]"
   test_cases:

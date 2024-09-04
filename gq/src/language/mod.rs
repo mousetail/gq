@@ -42,6 +42,25 @@ pub fn transpile_program(
             continue;
         }
 
+        if char == '"' {
+            let mut value = String::new();
+            while let Some(char) = iter.next() {
+                if char == '"' {
+                    break;
+                }
+                if char == '\\' {
+                    value.extend(iter.next())
+                } else {
+                    value.push(char);
+                }
+            }
+            stack
+                .current_group
+                .stack
+                .push(serde_json::to_string(&value).unwrap());
+            continue;
+        }
+
         if let Some(mut digit_value) = char.to_digit(10) {
             while let Some(next_digit_value) = iter.peek().and_then(|k| k.to_digit(10)) {
                 digit_value = digit_value * 10 + next_digit_value;

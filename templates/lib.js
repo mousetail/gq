@@ -137,3 +137,21 @@ const mul = (a, b) => {
         return null;
     }
 }
+
+const iter = (param) => {
+    if (typeof param == 'number') {
+        return [param]
+    } else {
+        return param
+    }
+}
+
+const to_bool = (param) => {
+    if (typeof param == 'number') {
+        return param != 0
+    }
+    if (typeof param == 'null') {
+        return false;
+    }
+    return param.length > 0
+}

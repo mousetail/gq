@@ -101,6 +101,10 @@ impl Stack {
         ));
     }
 
+    pub fn has_group(&mut self) -> bool {
+        self.frames.len() > 0
+    }
+
     pub fn pop_group(&mut self) -> StackBracketGroup {
         std::mem::replace(&mut self.current_group, self.frames.pop().unwrap())
     }

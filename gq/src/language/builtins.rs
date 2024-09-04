@@ -41,34 +41,28 @@ pub const BUILTINS: &'static [Builtin] = &[
             { inner }
         "
         ),
-        bracket_handlers: &[
-            BracketHandler {
-                output_handler: None,
-                fragment: fragment!(""),
-            },
-            BracketHandler {
-                output_handler: Some(OutputHandler {
-                    fragment: half_fragment!(
-                        "
+        bracket_handlers: &[BracketHandler {
+            output_handler: Some(OutputHandler {
+                fragment: half_fragment!(
+                    "
                         {arr:local}.push({value:in});
                         "
-                    ),
-                    behavior: MultiOutputBehavior::FlattenAll,
-                }),
-                fragment: fragment!(
-                    "
+                ),
+                behavior: MultiOutputBehavior::FlattenAll,
+            }),
+            fragment: fragment!(
+                "
                     const {out:out} = {arr:local};
                     {inner}
                     "
-                ),
-            },
-        ],
+            ),
+        }],
     },
     Builtin {
         token: '?',
         template: fragment!(
             "
-            const { condition:local } = {condition_var:in};
+            const { condition:local } = to_bool({condition_var:in});
 
             const {if_true:local} = ()=>{{
                 {inner}
@@ -174,19 +168,43 @@ pub const BUILTINS: &'static [Builtin] = &[
         bracket_handlers: &[],
     },
     Builtin {
-        token: '1',
+        token: 'u',
         template: fragment!(
             "
-            const {out:out} = 1;
+            for (const {out:out} of iter({op1:in})){{
+                { inner }
+            }}
             "
         ),
         bracket_handlers: &[],
     },
     Builtin {
-        token: '5',
+        token: ':',
         template: fragment!(
             "
-            const {out:out} = 5;
+            const {out1:out} = {value:in}, {out2:out} = {value:in};
+            {inner}
+            "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        token: '$',
+        template: fragment!(
+            "
+            const [{out1:out},{out2:out}] = [{value1:in},{value2:in}];
+            {inner}
+            "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        token: '@',
+        template: fragment!(
+            "
+            // {value1:in}
+            const [{out1:out},{out2:out},{out3:out}] = [{value2:in},{value1:in},{value2:in}];
+            {inner}
             "
         ),
         bracket_handlers: &[],

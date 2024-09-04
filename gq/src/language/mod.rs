@@ -38,6 +38,19 @@ pub fn transpile_program(
             continue;
         }
 
+        if char.is_whitespace() {
+            continue;
+        }
+
+        if let Some(mut digit_value) = char.to_digit(10) {
+            while let Some(next_digit_value) = iter.peek().and_then(|k| k.to_digit(10)) {
+                digit_value = digit_value * 10 + next_digit_value;
+                iter.next();
+            }
+            stack.current_group.stack.push(format!("{digit_value}"));
+            continue;
+        }
+
         let builtin = BUILTINS
             .iter()
             .find(|d| d.token == char)
@@ -59,6 +72,9 @@ pub fn transpile_program(
         }
     }
 
+    while stack.has_group() {
+        dispose_bracket_handler(&mut output, stack.pop_group(), &mut stack)?;
+    }
     dispose_bracket_handler(&mut output, stack.current_group.clone(), &mut stack)?;
 
     output.write(template_types::Output::Dedent)?;

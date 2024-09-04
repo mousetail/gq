@@ -113,7 +113,7 @@ pre {
             let className = expected_output_text == output.innerText ? 'green' : 'red';
             return [
                 html('td', "", {"class":className}, [
-                    html('pre', JSON.stringify(test_case.input))
+                    html('pre', test_case.input.map(i=>JSON.stringify(i)).join('\n'))
                 ]),
                 html('td', "", {"class":className}, [
                     html('pre', expected_output_text)

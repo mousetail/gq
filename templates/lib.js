@@ -74,12 +74,13 @@ const div = (a, b) => {
         const copy = [];
         let last_group = 0;
         for (let i = 0; i < a.length; i++) {
-            if (eq(a.slice(i, b.length), b)) {
+            if (eq(a.slice(i, i + b.length), b)) {
                 copy.push(a.slice(last_group, i - last_group));
                 last_group = i + b.length;
                 i = last_group - 1;
             }
         }
+        copy.push(a.slice(last_group));
         return copy;
     } else if (typeof a == 'string') {
         return div(a, `${b}`)
@@ -92,6 +93,7 @@ const div = (a, b) => {
                 last_group = i + 1;
             }
         }
+        copy.push(a.slice(last_group));
         return copy;
     } else {
         return null;
@@ -108,7 +110,7 @@ const mul = (a, b) => {
     } else if (typeof a == 'string' && typeof b == 'string') {
         return [...a].join(b)
     } else if (typeof a == 'object' && typeof b == 'object') {
-        const copy = [a];
+        const copy = [];
         for (let i = 0; i < a.length; i++) {
             copy.push(a[i]);
             if (i < a.length - 1) {

@@ -26,6 +26,67 @@
     - input: [[1, 2, 3], 4]
       output:
         - [1, 2, 3, 4]
+- name: "Test Multiplication"
+  code: "*"
+  test_cases:
+    - input: [3, 5]
+      output: [15]
+    - input:
+        - [1, 2, 3]
+        - [4, 5, 6]
+      output:
+        - [1, 4, 5, 6, 2, 4, 5, 6, 3]
+    - input: [null, null]
+      output:
+        - null
+    - input: ["abc", "beta"]
+      output:
+        - "abetabbetac"
+    - input: ["alpha", 3]
+      output:
+        - "alphaalphaalpha"
+    - input: [12, "alpha"]
+      output:
+        - null
+    - input: [12, null]
+      output:
+        - 12
+    - input: [[1, 2, 3], 4]
+      output:
+        - [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+- name: "Test Division"
+  code: "/"
+  test_cases:
+    - input: [15, 3]
+      output: [5]
+    - input: [15, 2]
+      output: [7.5]
+    - input:
+        - [1, 2, 3, 4, 5]
+        - [2, 3]
+      output:
+        - [[1], [4, 5]]
+    - input: [null, null]
+      output:
+        - null
+    - input: ["elto$beko$b", "$b"]
+      output:
+        - ["elto", "eko", ""]
+    - input: ["alpha", 3]
+      output:
+        - ["alpha"]
+    - input: ["alpha", ""]
+      output:
+        - ["a", "l", "p", "h", "a"]
+    - input: [12, "alpha"]
+      output:
+        - null
+    - input: [12, null]
+      output:
+        - 12
+    - input: [[1, 2, 3, 4, 5], 4]
+      output:
+        - [[1, 2, 3], [5]]
 - name: "Test Subtraction"
   code: "-"
   test_cases:

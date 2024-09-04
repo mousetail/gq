@@ -27,9 +27,10 @@ Builtins I need:
  
  - [x] addition (on arrays concats)
  - [x] subtraction  (on arrays removes)
- - [ ] multiplication (on arrays join)
- - [ ] division (on arrays split)
- - [ ] floor
+ - [x] multiplication (on arrays join)
+ - [x] division (on arrays split)
+ - [ ] modulo
+ - [ ] floor/flatten
 
  # String Related
 

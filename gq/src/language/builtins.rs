@@ -390,6 +390,15 @@ pub const BUILTINS: &'static [Builtin] = &[
         bracket_handlers: &[]
     },
     Builtin {
+        name: "Flatten/Floor",
+        description: "Floors numbers, flattens arrays",
+        token: 'f',
+        template: fragment!("
+            {out:out} = flatten_floor({a:in});
+        "),
+        bracket_handlers: &[]
+    },
+    Builtin {
         name: "Iterator Zip",
         description: "Takes one element each from every frame of the generator",
         token: 'Z',

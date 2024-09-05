@@ -446,3 +446,22 @@
             ["o", "l"],
             ["m", "a"],
           ]
+- name: Test Floor
+  code: "f"
+  test_cases:
+    - input:
+        - 3.2432
+      output:
+        - 3
+    - input:
+        - -5.25
+      output:
+        - -6
+    - input:
+        - [1, 2, 3.5]
+      output:
+        - [1, 2, 3.5]
+    - input:
+        - [1, 2, [3, 4], [5.2, [3], []]]
+      output:
+        - [1, 2, 3, 4, 5.2, 3]

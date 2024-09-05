@@ -30,7 +30,7 @@ Builtins I need:
  - [x] multiplication (on arrays join)
  - [x] division (on arrays split)
  - [ ] modulo
- - [ ] floor/flatten
+ - [x] floor/flatten
 
  # String Related
 

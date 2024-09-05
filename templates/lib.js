@@ -195,8 +195,6 @@ const generator_index = (idx, callback) => {
 
         return index(output, idx);
     } else {
-
-
         let expected_outputs = new Map();
         let generator_index = 0;
 
@@ -232,5 +230,31 @@ function* generator_zip(cb_1, cb_2) {
         let results = iterators.map(iter => iter.next())
         if (results.some(res => res.done)) return
         else yield results.flatMap(res => res.value)
+    }
+}
+
+const flatten = (a, out) => {
+    for (const value of a) {
+        if (typeof value == 'object') {
+            flatten(value, out)
+        } else {
+            out.push(value)
+        }
+    }
+}
+
+const flatten_floor = (a) => {
+    if (a == null) {
+        return null
+    } if (typeof a == 'string') {
+        return a
+    } if (typeof a == 'number' || typeof a == 'boolean') {
+        return Math.floor(a)
+    } if (typeof a == 'undefined') {
+        return null;
+    } else {
+        let out = [];
+        flatten(a, out);
+        return out;
     }
 }

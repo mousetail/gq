@@ -2,6 +2,8 @@ use template_macros::{fragment, half_fragment};
 
 use crate::language::builtin::{BracketHandler, Builtin, MultiOutputBehavior, OutputHandler};
 
+use super::builtin::BracketContextFlags;
+
 pub const BUILTINS: &'static [Builtin] = &[
     Builtin {
         name: "bracket",
@@ -9,15 +11,16 @@ pub const BUILTINS: &'static [Builtin] = &[
         token: '(',
         template: fragment!(
             "
-            const {wrapper:local} = () => {{
+            const {wrapper:local} = function* () {{
                 {inner}
             "
         ),
         bracket_handlers: &[BracketHandler {
+            flags: BracketContextFlags::new(),
             output_handler: Some(OutputHandler {
                 fragment: half_fragment!(
                     "
-                        {output:local}({value:in});
+                        yield ({value:in});
                     "
                 ),
                 behavior: MultiOutputBehavior::FlattenAll,
@@ -26,11 +29,9 @@ pub const BUILTINS: &'static [Builtin] = &[
                 "
                         //
                     }};
-                    const {output:local} = ({out_var:out})=>{{
+                    for ({output:out} of {wrapper:local}()) {{
                         {inner}
                     }}
-
-                    {wrapper:local}();
                 "
             ),
         }],
@@ -46,6 +47,7 @@ pub const BUILTINS: &'static [Builtin] = &[
         "
         ),
         bracket_handlers: &[BracketHandler {
+            flags: BracketContextFlags::new(),
             output_handler: Some(OutputHandler {
                 fragment: half_fragment!(
                     "
@@ -70,18 +72,19 @@ pub const BUILTINS: &'static [Builtin] = &[
             "
             const { condition:local } = to_bool({condition_var:in});
 
-            const {if_true:local} = ()=>{{
+            const {if_true:local} = function* (){{
                 {inner}
             "
         ),
         bracket_handlers: &[
             BracketHandler {
+                flags: BracketContextFlags::new().set_no_pop(true),
                 output_handler: None,
                 fragment: fragment!(
                     "
                     //
                 }}
-                const {if_false:local} = ()=>{{
+                const {if_false:local} = function* (){{
                     {inner}
                 }}
                 "
@@ -91,21 +94,18 @@ pub const BUILTINS: &'static [Builtin] = &[
                 output_handler: Some(OutputHandler {
                     fragment: half_fragment!(
                         "
-                        {inner:local}({value:in})
+                        yield [{value:in}];
                         "
                     ),
                     behavior: MultiOutputBehavior::Variadic,
                 }),
+                flags: BracketContextFlags::new(),
                 fragment: fragment!(
                     "
-                    const {inner:local} = ({value:out}) => {{
-                        {inner}
-                    }}
 
-                    if ({condition:local}) {{
-                        {if_true:local}();
-                    }} else {{
-                        {if_false:local}();
+                    const {generator:local} = ({condition:local})?{if_true:local}():{if_false:local}();
+                    for ([{value:out}] of {generator:local}) {{
+                        {inner}
                     }}
                 "
                 ),
@@ -135,6 +135,7 @@ pub const BUILTINS: &'static [Builtin] = &[
                     ),
                     behavior: MultiOutputBehavior::FlattenAll,
                 }),
+                flags: BracketContextFlags::new(),
                 fragment: fragment!(
                     "
                     //
@@ -155,6 +156,7 @@ pub const BUILTINS: &'static [Builtin] = &[
                     ),
                     behavior: MultiOutputBehavior::OnlyFirst,
                 }),
+                flags: BracketContextFlags::new(),
                 fragment: fragment!(
                     "
                 {inner:local}();
@@ -223,6 +225,18 @@ pub const BUILTINS: &'static [Builtin] = &[
             const {out:out} = div({op1:in}, {op2:in});
             { inner }
             "
+        ),
+        bracket_handlers: &[],
+    },
+    Builtin {
+        name: "mod",
+        description: "subtracts, or removes items from an array or string",
+        token: '%',
+        template: fragment!(
+            "
+            const {out:out} = mod({op1:in}, {op2:in});
+            { inner }
+        "
         ),
         bracket_handlers: &[],
     },
@@ -322,6 +336,7 @@ pub const BUILTINS: &'static [Builtin] = &[
             "
         ),
         bracket_handlers: &[BracketHandler {
+            flags: BracketContextFlags::new(),
             output_handler: Some(OutputHandler {
                 behavior: MultiOutputBehavior::FlattenAll,
                 fragment: half_fragment!(
@@ -362,6 +377,7 @@ pub const BUILTINS: &'static [Builtin] = &[
         ),
         bracket_handlers: &[
             BracketHandler {
+                flags: BracketContextFlags::new(),
                 output_handler: Some(OutputHandler {
                     fragment: half_fragment!("
                     if (({generate:local}({value:in}))) {{
@@ -414,6 +430,7 @@ pub const BUILTINS: &'static [Builtin] = &[
                     "),
                     behavior: MultiOutputBehavior::HalfZip
                 }),
+                flags: BracketContextFlags::new(),
                 fragment: fragment!("
                             //
                         }},
@@ -428,6 +445,7 @@ pub const BUILTINS: &'static [Builtin] = &[
                     "),
                     behavior: MultiOutputBehavior::Variadic
                 }),
+                flags: BracketContextFlags::new(),
                 fragment: fragment!("
                             //
                         }},
@@ -438,5 +456,18 @@ pub const BUILTINS: &'static [Builtin] = &[
                 ")
             },
         ]
-    }
+    },
+    Builtin {
+        name: "Multiple",
+        description: "Takes a number as input, outputs the next value from the stack N times. Useful for filtering items.",
+        token: 'm',
+        template: fragment!("
+            // {value:in}
+            for (let {i:local}=0; {i:local}<{total:in}; {i:local}++) {{
+                const {var:out} = {value:in};
+                {inner}
+            }}
+        "),
+        bracket_handlers: &[]
+    },
 ];

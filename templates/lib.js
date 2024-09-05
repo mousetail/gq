@@ -258,3 +258,19 @@ const flatten_floor = (a) => {
         return out;
     }
 }
+
+const mod = (a, b) => {
+    if (b == null) {
+        return a
+    } else if (a == null) {
+        return null
+    }
+
+    if (typeof a == 'number' && typeof b == 'number') {
+        return a % b
+    }
+
+    // todo: Implement for arrays and strings
+    console.warn("mod between non-numbers is not yet implemented");
+    return null;
+}

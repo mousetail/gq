@@ -87,6 +87,7 @@ pub fn transpile_program(
                 local_vars.clone(),
                 bracket_handler.fragment,
                 bracket_handler.output_handler,
+                bracket_handler.flags,
             );
         }
     }

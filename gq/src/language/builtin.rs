@@ -21,6 +21,7 @@ pub struct OutputHandler {
 pub struct BracketHandler {
     pub fragment: ProgramFragment<'static>,
     pub output_handler: Option<OutputHandler>,
+    pub flags: BracketContextFlags,
 }
 
 impl BracketHandler {
@@ -50,5 +51,21 @@ impl Builtin {
                 .iter()
                 .flat_map(|handler| handler.get_local_var_names()),
         )
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct BracketContextFlags {
+    pub no_pop: bool,
+}
+
+impl BracketContextFlags {
+    pub const fn new() -> BracketContextFlags {
+        BracketContextFlags { no_pop: false }
+    }
+
+    pub const fn set_no_pop(mut self, no_pop: bool) -> Self {
+        self.no_pop = no_pop;
+        return self;
     }
 }

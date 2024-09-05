@@ -8,6 +8,8 @@ use crate::language::{
     varnames::VarNames,
 };
 
+use super::builtin::BracketContextFlags;
+
 #[derive(Clone, Debug)]
 pub struct OutputHandlerInstance {
     pub inner: OutputHandler,
@@ -23,6 +25,7 @@ pub struct StackBracketGroup {
 
     pub destructors: Vec<Destructor>,
     pub stack: Vec<String>,
+    pub no_pop_index: Option<usize>,
 }
 
 impl StackBracketGroup {
@@ -68,6 +71,7 @@ impl Stack {
                 }),
                 destructors: vec![],
                 stack: vec![],
+                no_pop_index: None,
             },
             inputs_used: 0,
         }
@@ -80,14 +84,42 @@ impl Stack {
         return name;
     }
 
+    fn pop_after_no_pop_index<'a>(
+        no_pop_index: &mut usize,
+        inputs_used: usize,
+        frames: impl Iterator<Item = &'a mut StackBracketGroup>,
+    ) -> String {
+        let mut frames_left = *no_pop_index;
+        *no_pop_index += 1;
+
+        for frame in frames {
+            if frame.stack.len() > frames_left {
+                return frame.stack[frame.stack.len() - 1 - frames_left].to_owned();
+            }
+            frames_left -= frame.stack.len();
+        }
+
+        let value = format!("args[{}]", frames_left + inputs_used);
+        return value;
+    }
+
     pub fn pop(&mut self) -> String {
         if let Some(value) = self.current_group.stack.pop() {
             return value;
         }
 
-        for item in self.frames.iter_mut().rev() {
+        let mut iter = self.frames.iter_mut().rev();
+        if let Some(k) = &mut self.current_group.no_pop_index {
+            return Stack::pop_after_no_pop_index(k, self.inputs_used, iter);
+        }
+
+        while let Some(item) = iter.next() {
             if let Some(value) = item.stack.pop() {
                 return value;
+            }
+
+            if let Some(k) = &mut item.no_pop_index {
+                return Stack::pop_after_no_pop_index(k, self.inputs_used, iter);
             }
         }
 
@@ -101,6 +133,7 @@ impl Stack {
         local_vars: HashMap<String, String>,
         end_fragment: ProgramFragment<'static>,
         output_handler: Option<OutputHandler>,
+        flags: BracketContextFlags,
     ) {
         self.frames.push(std::mem::replace(
             &mut self.current_group,
@@ -114,6 +147,7 @@ impl Stack {
                     max_variadic_outputs: Cell::new(None),
                     child_variadic_outputs: Cell::new(None),
                 }),
+                no_pop_index: flags.no_pop.then(|| 0),
             },
         ));
     }

@@ -149,11 +149,11 @@ const iter = (param) => {
 }
 
 const to_bool = (param) => {
-    if (typeof param == 'number') {
-        return param != 0
-    }
-    if (typeof param == 'null') {
+    if (param == null) {
         return false;
+    }
+    if (typeof param == 'number') {
+        return param > 0
     }
     return param.length > 0
 }
@@ -190,8 +190,6 @@ const generator_index = (idx, callback) => {
             output.push(value);
             return false;
         });
-
-        console.log(floored_index, output);
 
         return index(output, idx);
     } else {
@@ -273,4 +271,12 @@ const mod = (a, b) => {
     // todo: Implement for arrays and strings
     console.warn("mod between non-numbers is not yet implemented");
     return null;
+}
+
+const decrement = (a) => {
+    if (typeof a == 'number') {
+        return a - 1;
+    } else {
+        return null;
+    }
 }

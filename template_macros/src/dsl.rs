@@ -2,7 +2,7 @@ use std::iter::Peekable;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use template_types::{HighestVarNumbers, Output, ProgramFragment, TemplateToken};
+use template_types::{Output, ProgramFragment, TemplateToken};
 
 fn index_or_new(items: &mut Vec<String>, name: &str) -> usize {
     if let Some(index) = items.iter().position(|k| k == name) {

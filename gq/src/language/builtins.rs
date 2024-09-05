@@ -470,4 +470,40 @@ pub const BUILTINS: &'static [Builtin] = &[
         "),
         bracket_handlers: &[]
     },
+    Builtin {
+        name: "Modify",
+        description: "Apply a modification to the top of the stack N times",
+        token: 'M',
+        template: fragment!("
+            const {initial_value:local} = {initial_value:in};
+            const {condition:local} = {condition:in};
+
+            const {cb:local} = function* ({current_value:out}, {steps:local}) {{
+                if (!to_bool({steps:local})) {{
+                    yield {current_value:out};
+                    return;
+                }}
+                {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        yield* {cb:local} ({value:in}, decrement({steps:local}));
+                    "),
+                    behavior: MultiOutputBehavior::OnlyFirst
+                }),
+                flags: BracketContextFlags::new(),
+                fragment: fragment!("
+                        //
+                    }};
+
+
+                    for ({value:out} of {cb:local}({initial_value:local}, {condition:local})) {{
+                        {inner}
+                    }}
+                ")
+            },
+        ]
+    }
 ];

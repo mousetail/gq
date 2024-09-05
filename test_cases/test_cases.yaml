@@ -479,3 +479,40 @@
     - input: [3, 1]
       output:
         - 3
+- name: Test Modify
+  code: "5$M2*]"
+  test_cases:
+    - input:
+        - 3
+      output:
+        - 40
+    - input:
+        - 0
+      output:
+        - 5
+    - input:
+        - ["greg"]
+      output:
+        - 10
+    - input:
+        - []
+      output:
+        - 5
+    - input:
+        - -25
+      output:
+        - 5
+- name: Test Modify Multiple Outputs
+  code: "1 2M3r+]"
+  test_cases:
+    - input: []
+      output:
+        - 1
+        - 2
+        - 3
+        - 2
+        - 3
+        - 4
+        - 3
+        - 4
+        - 5

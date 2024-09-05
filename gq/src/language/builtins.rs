@@ -505,5 +505,75 @@ pub const BUILTINS: &'static [Builtin] = &[
                 ")
             },
         ]
-    }
+    },
+    Builtin {
+        name: "Backwards",
+        description: "Inverts numbers, reverses arrays",
+        token: 'b',
+        template: fragment!("
+            {out:out} = backwards({a:in});
+        "),
+        bracket_handlers: &[]
+    },
+    Builtin {
+        name: "Backwards",
+        description: "Reverse the order of a generator",
+        token: 'B',
+        template: fragment!("
+            const {arr:local} = []
+
+            {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        {arr:local}.push({value:in})
+                    "),
+                    behavior: MultiOutputBehavior::FlattenAll
+                }),
+                flags: BracketContextFlags::new(),
+                fragment: fragment!("
+                    for (let {i:local} = {arr:local}.length-1; {i:local}>=0; {i:local}-=1) {{
+                        const {value:out} = {arr:local}[{i:local}];
+                        {inner}
+                    }}
+                ")
+            },
+        ]
+    },
+    Builtin {
+        name: "Array Count",
+        description: "Get the length of an array",
+        token: 'c',
+        template: fragment!("
+            {out:out} = count({a:in});
+        "),
+        bracket_handlers: &[]
+    },
+    
+    Builtin {
+        name: "Generator Count",
+        description: "Find how many values a generator produces",
+        token: 'C',
+        template: fragment!("
+            let {count:local} = 0
+
+            {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        {count:local} += 1;
+                    "),
+                    behavior: MultiOutputBehavior::OnlyFirst
+                }),
+                flags: BracketContextFlags::new(),
+                fragment: fragment!("
+                    let {out:out} = {count:local};
+                ")
+            },
+        ]
+    },
 ];

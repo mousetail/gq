@@ -280,3 +280,39 @@ const decrement = (a) => {
         return null;
     }
 }
+
+const backwards = (a) => {
+    if (a == null) {
+        return null;
+    }
+
+    if (typeof a == 'number') {
+        return -a;
+    }
+
+    if (typeof a == 'string') {
+        return a.split('').toReversed().join('');
+    }
+
+    return a.toReversed();
+}
+
+const count = (a) => {
+    if (a == null) {
+        return 0;
+    }
+
+    if (typeof a == 'string') {
+        return a.length
+    }
+
+    if (typeof a == 'number') {
+        return `${a}`.length
+    }
+
+    if (typeof a == 'object') {
+        return a.length;
+    }
+
+    return null;
+}

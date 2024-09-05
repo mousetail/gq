@@ -10,18 +10,22 @@ Builtins I need:
  - [x] Range
  - [ ] Reshape
  - [ ] Transpose
+ - [x] Reverse
+ - [x] Length
 
 # Generic
  - [x] Comma - Yields the values from both it's arguments seperately
 
 # Generator Related
  - [x] Reduce - Runs on every pair and outputs a single value
- - [ ] Scan - Like reduce but outputs every intmediate value
+ - [ ] Scan - Like reduce but outputs every intermediate value
  - [ ] First
  - [ ] Last
+ - [x] Index - Finds the nth element of a list or generator
  - [ ] Until - Outputs the first value where the predicate is False
  - [ ] While - Outputs the last value where the predicate is True
  - [ ] Is empty? Returns true if there is at least one item
+ - [x] Count
 
  # Math
  
@@ -43,14 +47,14 @@ Builtins I need:
 
 # Constants
 - [x] 0-9
-- [ ] String Literals
+- [x] String Literals
 - [ ] Empty
 - [ ] Empty Array
 
 # Control Flow
 - [x] If/Then/Else - Needs special casing to handle multiple output values
-- [ ] If/Change - Applies a transformation if condition, else return the value unchanged
-- [ ] Select - If a condituion is true, return a value unchanged. Else return None
+- [x] Modify - Applies a transformation if condition, else return the value unchanged
+- [x] Multiple - If a condituion is true, return a value unchanged. Else return None
 
 # Stack Related
 - [x] Dup

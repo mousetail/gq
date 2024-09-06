@@ -565,3 +565,15 @@
   test_cases:
     - input: []
       output: [15]
+- name: Test Knot
+  code: 3Kr]
+  test_cases:
+    - input: []
+      output:
+        - 0
+        - 1
+        - 0
+        - 2
+        - 0
+        - 1
+        - 0

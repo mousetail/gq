@@ -18,7 +18,7 @@ Builtins I need:
 
 # Generator Related
  - [x] Reduce - Runs on every pair and outputs a single value
- - [ ] Scan - Like reduce but outputs every intermediate value
+ - [x] Knot - Repeat but produce every intermediate value
  - [ ] First
  - [ ] Last
  - [x] Index - Finds the nth element of a list or generator

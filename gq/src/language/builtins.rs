@@ -550,8 +550,7 @@ pub const BUILTINS: &'static [Builtin] = &[
             {out:out} = count({a:in});
         "),
         bracket_handlers: &[]
-    },
-    
+    },  
     Builtin {
         name: "Generator Count",
         description: "Find how many values a generator produces",
@@ -572,6 +571,37 @@ pub const BUILTINS: &'static [Builtin] = &[
                 flags: BracketContextFlags::new(),
                 fragment: fragment!("
                     let {out:out} = {count:local};
+                ")
+            },
+        ]
+    },
+    Builtin {
+        name: "Knot",
+        description: "Repeats a generator forever, producing each intermediate value",
+        token: 'K',
+        template: fragment!("
+            const {initial_value:local} = {value:in};
+
+            let {inner:local} = function* ({value:out}) {{
+                {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        yield ({value:in});
+                        yield* {inner:local}({value:in});
+                    "),
+                    behavior: MultiOutputBehavior::FlattenAll
+                }),
+                flags: BracketContextFlags::new(),
+                fragment: fragment!("
+                        //
+                    }}
+
+                    for ({value:out} of {inner:local}({initial_value:local})) {{
+                        {inner}
+                    }}
                 ")
             },
         ]

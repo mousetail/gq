@@ -20,18 +20,22 @@ pub fn write_variadic_fragment(
         .map(|_| stack.pop())
         .collect();
 
-    assert_eq!(
-        fragment.arguments_pushed, 1,
+    assert!(
+        fragment.arguments_pushed >= 1,
         "Variadic fragments can only push one argument"
     );
-    let out_vars: Vec<_> = (0..outputs).map(|_| stack.push()).collect();
+    let mut out_vars: Vec<_> = (0..outputs + fragment.arguments_pushed - 1)
+        .map(|_| stack.push())
+        .collect();
+    let mut out_var_parts = out_vars.split_off(outputs);
+    out_var_parts.insert(0, out_vars.join(", "));
 
     write_tokens(
         output,
         fragment.init_tokens,
         local_vars,
         &in_vars,
-        &[out_vars.join(", ")],
+        &out_var_parts,
     )?;
 
     stack.current_group.destructors.push(Destructor {

@@ -33,7 +33,7 @@ Builtins I need:
  - [x] subtraction  (on arrays removes)
  - [x] multiplication (on arrays join)
  - [x] division (on arrays split)
- - [ ] modulo
+ - [x] modulo
  - [x] floor/flatten
 
  # String Related
@@ -60,9 +60,9 @@ Builtins I need:
 - [x] Dup
 - [x] Swap
 - [x] Over - Copies the second value from the stack
-- [ ] Store - Push a value to the secondary stack
+- [x] Store - Push a value to the secondary stack
+- [x] Keep - Run a function but keep it's arguments on the stack
 - [ ] Peek - Copies the top of the secondary stack
-- [ ] Unstore - Pops the value of the secondary stack
 
 # Thoughts on Special Cases
 "," should be repeatable to take any number of arguments

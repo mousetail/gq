@@ -216,7 +216,9 @@ const generator_index = (idx, callback) => {
     }
 }
 
-const array_zip = (a, b) => {
+const array_zip = (a_original, b_original) => {
+    const [a, b] = [iter(a_original), iter(b_original)];
+
     return new Array(Math.min(a.length, b.length)).fill(0).map((_e, i) => {
         return [a[i], b[i]];
     });

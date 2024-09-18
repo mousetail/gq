@@ -419,8 +419,9 @@ pub const BUILTINS: &'static [Builtin] = &[
         description: "Takes one element each from every frame of the generator",
         token: 'Z',
         template: fragment!("
-            for ({var:local} of generator_zip(function* () {{
-                {inner}
+            for ({var:local} of generator_zip(
+                function* () {{
+                    {inner}
         "),
         bracket_handlers: &[
             BracketHandler {
@@ -430,7 +431,7 @@ pub const BUILTINS: &'static [Builtin] = &[
                     "),
                     behavior: MultiOutputBehavior::HalfZip
                 }),
-                flags: BracketContextFlags::new(),
+                flags: BracketContextFlags::new().set_no_pop(true),
                 fragment: fragment!("
                             //
                         }},
@@ -600,6 +601,65 @@ pub const BUILTINS: &'static [Builtin] = &[
                     }}
 
                     for ({value:out} of {inner:local}({initial_value:local})) {{
+                        {inner}
+                    }}
+                ")
+            },
+        ]
+    },
+    Builtin {
+        name: "Store",
+        description: "Temporairly pops a value from the stack, and pushes it again at the end",
+        token: '&',
+        template: fragment!("
+            const {temp_storage:local} = {value:in};
+
+            const {inner:local} = function* () {{
+                {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        yield [{value:in}];
+                    "),
+                    behavior: MultiOutputBehavior::Variadic
+                }),
+                flags: BracketContextFlags::new(),
+                fragment: fragment!("
+                        //
+                    }}
+
+                    for ([{value:out}] of {inner:local}()) {{
+                        const {out:out} = {temp_storage:local};
+                        {inner}
+                    }}
+                ")
+            },
+        ]
+    },
+    Builtin {
+        name: "Keep",
+        description: "Stores values popped during this group then push them again at the end.",
+        token: '#',
+        template: fragment!("
+            const {inner:local} = function* () {{
+                {inner}
+        "),
+        bracket_handlers: &[
+            BracketHandler {
+                output_handler: Some(OutputHandler {
+                    fragment: half_fragment!("
+                        yield [{value:in}];
+                    "),
+                    behavior: MultiOutputBehavior::Variadic
+                }),
+                flags: BracketContextFlags::new().set_no_pop(true),
+                fragment: fragment!("
+                        //
+                    }}
+
+                    for ([{value:out}] of {inner:local}()) {{
                         {inner}
                     }}
                 ")

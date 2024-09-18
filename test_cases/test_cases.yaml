@@ -577,3 +577,30 @@
         - 0
         - 1
         - 0
+- name: Test Store
+  code: "1 2 3 4 & + : ]"
+  test_cases:
+    - input: []
+      output:
+        - 1
+        - 5
+        - 5
+        - 4
+- name: Test Keep
+  code: "[2 4#-]]"
+  test_cases:
+    - input: []
+      output:
+        - [2, 4, -2]
+- name: Test Finnonochi
+  code: "[2r]K:s$0izu:s34=1$-m]0i"
+  test_cases:
+    - input: []
+      output:
+        - 1
+        - 1
+        - 2
+        - 3
+        - 5
+        - 8
+        - 13

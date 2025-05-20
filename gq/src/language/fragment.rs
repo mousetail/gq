@@ -36,6 +36,7 @@ pub fn write_variadic_fragment(
         local_vars,
         &in_vars,
         &out_var_parts,
+        None,
     )?;
 
     stack.current_group.destructors.push(Destructor {
@@ -53,6 +54,7 @@ pub fn write_fragment(
     fragment: ProgramFragment<'static>,
     stack: &mut Stack,
     local_vars: &HashMap<String, String>,
+    all_outs: Option<&Vec<String>>,
 ) -> std::io::Result<()> {
     let mut in_vars: Vec<_> = (0..fragment.arguments_popped)
         .map(|_| stack.pop())
@@ -68,6 +70,7 @@ pub fn write_fragment(
         local_vars,
         &in_vars,
         &out_vars,
+        all_outs,
     )?;
 
     stack.current_group.destructors.push(Destructor {
@@ -193,6 +196,7 @@ pub fn dispose_bracket_handler(
             &destructor.local_vars,
             &destructor.in_vars,
             &destructor.out_vars,
+            None,
         )?;
     }
 
@@ -234,6 +238,7 @@ pub fn dispose_bracket_handler(
             bracket_handler.brackent_end_fragment,
             stack,
             &bracket_handler.local_variables,
+            None,
         )?;
     }
 
@@ -246,6 +251,7 @@ pub fn write_tokens(
     local_vars: &HashMap<String, String>,
     in_vars: &[String],
     out_vars: &[String],
+    all_outs: Option<&Vec<String>>,
 ) -> std::io::Result<()> {
     for token in tokens
         .into_iter()
@@ -259,7 +265,14 @@ pub fn write_tokens(
             TemplateToken::LocalVar(n) => {
                 output.write(Output::String(local_vars.get(n).unwrap().as_str()))?
             }
-            TemplateToken::AllIns => todo!(),
+            TemplateToken::AllIns => output.write(Output::String(
+                &all_outs
+                    .into_iter()
+                    .flatten()
+                    .flat_map(|e| [", ", e.as_str()])
+                    .skip(1)
+                    .collect::<String>(),
+            ))?,
         }
     }
 
@@ -285,6 +298,7 @@ pub fn write_comma(
         local_vars,
         &stack_values,
         &[],
+        None,
     )?;
 
     for destructor in stack.destruct_unused_vars().iter().rev() {
@@ -294,6 +308,7 @@ pub fn write_comma(
             &destructor.local_vars,
             &destructor.in_vars,
             &destructor.out_vars,
+            None,
         )?;
     }
 

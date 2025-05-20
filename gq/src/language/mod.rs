@@ -4,7 +4,7 @@ use builtin::Builtin;
 use builtins::BUILTINS;
 use fragment::{dispose_bracket_handler, write_comma};
 use lexer::{LexerValue, parse};
-use stack::Stack;
+use stack::{MockStack, Stack};
 
 mod builtin;
 mod builtins;
@@ -32,8 +32,25 @@ fn parse_single_command(
                 "// {}",
                 builtin.name
             )))?;
+
+            let all_outs = if !builtin.bracket_handlers.is_empty() && builtin.uses_all_ins() {
+                let number_of_inputs_shadowed = builtin
+                    .get_bracket_largest_final_stack_size(&mut iter.clone().map(|e| Box::new(e)));
+
+                let top_n_values = stack.get_top_n_values(number_of_inputs_shadowed);
+                Some(top_n_values)
+            } else {
+                None
+            };
+
             output.write(template_types::Output::NewLine)?;
-            fragment::write_fragment(output, builtin.template, stack, &local_vars)?;
+            fragment::write_fragment(
+                output,
+                builtin.template,
+                stack,
+                &local_vars,
+                all_outs.as_ref(),
+            )?;
 
             for bracket_handler in builtin.bracket_handlers.iter().rev() {
                 stack.push_group(

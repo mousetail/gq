@@ -128,6 +128,28 @@ impl Stack {
         return value;
     }
 
+    pub fn get_top_n_values(&self, n: usize) -> Vec<String> {
+        let mut out = vec![];
+
+        out.extend_from_slice(
+            &self.current_group.stack[self.current_group.stack.len().saturating_sub(n + 1)..],
+        );
+
+        if out.len() < n {
+            let index = self.frames.len() - 1;
+
+            while out.len() < n {
+                let frame = &self.frames[index];
+
+                out.extend_from_slice(
+                    &frame.stack[frame.stack.len().saturating_sub(n - out.len() + 1)..],
+                );
+            }
+        }
+
+        out
+    }
+
     pub fn push_group(
         &mut self,
         local_vars: HashMap<String, String>,
@@ -194,5 +216,44 @@ impl Stack {
             .split_off(self.current_group.destructors.len() - number_of_orphaned_stack_frames);
 
         split_off_values
+    }
+
+    pub(super) fn mock(&self) -> MockStack {
+        return MockStack(
+            self.frames
+                .iter()
+                .map(|e| e.stack.len())
+                .chain([self.current_group.stack.len()])
+                .collect(),
+        );
+    }
+}
+
+/**
+ * A stack that only keeps track of the lengths
+ */
+pub(super) struct MockStack(Vec<usize>);
+
+impl MockStack {
+    pub fn push(&mut self) {
+        *self.0.last_mut().unwrap() += 1;
+    }
+
+    pub fn pop(&mut self) {
+        *self
+            .0
+            .iter_mut()
+            .rev()
+            .filter(|e| **e > 0)
+            .next()
+            .expect("Attempt to pop from empty stack") -= 1;
+    }
+
+    pub fn push_frame(&mut self) {
+        self.0.push(0)
+    }
+
+    pub fn pop_frame(&mut self) -> Option<usize> {
+        self.0.pop()
     }
 }

@@ -565,17 +565,17 @@
   test_cases:
     - input: []
       output: [15]
-# - name: Test Knot
-#   code: 3Kr
-#   test_cases:
-#     - input: []
-#       output:
-#         - 0
-#         - 1
-#         - 0
-#         - 2
-#         - 0
-#         - 1
+- name: Test Knot
+  code: 3Kr
+  test_cases:
+    - input: []
+      output:
+        - 0
+        - 1
+        - 0
+        - 2
+        - 0
+        - 1
 #         - 0
 - name: Test Store
   code: "1 2 3 4 &(+ :)"
@@ -592,15 +592,15 @@
     - input: []
       output:
         - [2, 4, -2]
-# - name: Test Finnonochi
-#   code: "7T(0 1K(:&+$)~)"
-#   test_cases:
-#     - input: []
-#       output:
-#         - 1
-#         - 1
-#         - 2
-#         - 3
-#         - 5
-#         - 8
-#         - 13
+- name: Test Finnonochi
+  code: "7T(0 1K(:&+$)~)"
+  test_cases:
+    - input: []
+      output:
+        - 1
+        - 1
+        - 2
+        - 3
+        - 5
+        - 8
+        - 13

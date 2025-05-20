@@ -1,4 +1,8 @@
+use std::ops::Deref;
+
 use template_types::{HighestVarNumbers, ProgramFragment, TemplateToken};
+
+use super::lexer::LexerValue;
 
 #[derive(Debug, Clone, Copy)]
 pub enum MultiOutputBehavior {
@@ -59,6 +63,21 @@ impl Builtin {
                 .bracket_handlers
                 .iter()
                 .any(|e| e.fragment.uses_all_ins())
+    }
+
+    pub fn get_bracket_largest_final_stack_size<'a>(
+        &self,
+        next: &mut impl Iterator<Item = impl Deref<Target = LexerValue>>,
+    ) -> usize {
+        let mut max = 0;
+        for bracket_handler in self.bracket_handlers {
+            let value = next.next().unwrap();
+            let (_, v) = value.get_stack_movement(next);
+
+            max = max.max(v);
+        }
+
+        max
     }
 }
 

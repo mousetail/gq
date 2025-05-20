@@ -1,7 +1,7 @@
 #[cfg(feature = "proc_macro")]
 use proc_macro2::TokenStream;
 #[cfg(feature = "proc_macro")]
-use quote::{format_ident, quote, ToTokens};
+use quote::{ToTokens, format_ident, quote};
 
 #[derive(Clone, Debug, Copy)]
 pub enum Output<'a> {
@@ -12,7 +12,7 @@ pub enum Output<'a> {
 }
 
 impl<'a> Output<'a> {
-    pub const fn str(s: &'a str) -> Output {
+    pub const fn str(s: &'a str) -> Output<'a> {
         Output::String(s)
     }
 }
@@ -87,7 +87,7 @@ pub struct ProgramFragment<'a> {
 }
 
 impl<'a> ProgramFragment<'a> {
-    pub fn get_local_var_names(&self) -> impl Iterator<Item = &'a str> {
+    pub fn get_local_var_names(&self) -> impl Iterator<Item = &'a str> + use<'a> {
         self.init_tokens
             .get_local_var_names()
             .chain(self.destruct_tokens.get_local_var_names())

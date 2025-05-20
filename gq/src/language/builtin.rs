@@ -25,7 +25,7 @@ pub struct BracketHandler {
 }
 
 impl BracketHandler {
-    fn get_local_var_names(&self) -> impl Iterator<Item = &'static str> {
+    fn get_local_var_names(&self) -> impl Iterator<Item = &'static str> + use<> {
         return self.fragment.get_local_var_names().chain(
             self.output_handler
                 .into_iter()
@@ -45,7 +45,7 @@ pub struct Builtin {
 }
 
 impl Builtin {
-    pub fn get_local_var_names(&self) -> impl Iterator<Item = &'static str> {
+    pub fn get_local_var_names(&self) -> impl Iterator<Item = &'static str> + use<> {
         self.template.get_local_var_names().chain(
             self.bracket_handlers
                 .iter()

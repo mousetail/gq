@@ -7,7 +7,7 @@
 | e | E | \% mod |
 | f Flatten/Floor | F | \& Store |
 | g | G | \' |
-| h | H | \( bracket |
+| h | H | \( |
 | i Array Index | I Generator Index | \) |
 | j | J | \* times |
 | k | K Knot | \+ plus |
@@ -19,7 +19,7 @@
 | q | Q | \; |
 | r range | R Reduce | \< |
 | s List Sum | S Generator Sum | \= equals |
-| t | T | \> |
+| t | T take | \> |
 | u Unwrap | U | \? If |
 | v | V | \@ Over |
 | w | W | \[ List wrap |

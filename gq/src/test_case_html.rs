@@ -35,6 +35,8 @@ pub fn gen_test_case_html() -> std::io::Result<()> {
     let test_results: Vec<_> = test_cases
         .into_iter()
         .map(|test_case| {
+            eprintln!("{}...", test_case.name);
+
             let mut output = Cursor::new(vec![]);
             transpile_program(&mut test_case.code.chars().peekable(), &mut output).unwrap();
 

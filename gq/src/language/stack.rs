@@ -217,43 +217,4 @@ impl Stack {
 
         split_off_values
     }
-
-    pub(super) fn mock(&self) -> MockStack {
-        return MockStack(
-            self.frames
-                .iter()
-                .map(|e| e.stack.len())
-                .chain([self.current_group.stack.len()])
-                .collect(),
-        );
-    }
-}
-
-/**
- * A stack that only keeps track of the lengths
- */
-pub(super) struct MockStack(Vec<usize>);
-
-impl MockStack {
-    pub fn push(&mut self) {
-        *self.0.last_mut().unwrap() += 1;
-    }
-
-    pub fn pop(&mut self) {
-        *self
-            .0
-            .iter_mut()
-            .rev()
-            .filter(|e| **e > 0)
-            .next()
-            .expect("Attempt to pop from empty stack") -= 1;
-    }
-
-    pub fn push_frame(&mut self) {
-        self.0.push(0)
-    }
-
-    pub fn pop_frame(&mut self) -> Option<usize> {
-        self.0.pop()
-    }
 }

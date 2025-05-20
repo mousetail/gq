@@ -4,7 +4,7 @@ use builtin::Builtin;
 use builtins::BUILTINS;
 use fragment::{dispose_bracket_handler, write_comma};
 use lexer::{LexerValue, parse};
-use stack::{MockStack, Stack};
+use stack::Stack;
 
 mod builtin;
 mod builtins;

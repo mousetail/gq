@@ -15,6 +15,7 @@ pub fn write_variadic_fragment(
     stack: &mut Stack,
     local_vars: &HashMap<String, String>,
     outputs: usize,
+    all_outs: Option<&Vec<String>>,
 ) -> std::io::Result<()> {
     let in_vars: Vec<_> = (0..fragment.arguments_popped)
         .map(|_| stack.pop())
@@ -36,7 +37,7 @@ pub fn write_variadic_fragment(
         local_vars,
         &in_vars,
         &out_var_parts,
-        None,
+        all_outs,
     )?;
 
     stack.current_group.destructors.push(Destructor {
@@ -182,6 +183,7 @@ pub fn dispose_bracket_handler(
     output: &mut OutputWriter<impl Write>,
     bracket_handler: StackBracketGroup,
     stack: &mut Stack,
+    all_outs: Option<&Vec<String>>,
 ) -> std::io::Result<()> {
     let (output_handler, local_vars) = bracket_handler
         .get_output_handler_context()
@@ -196,7 +198,7 @@ pub fn dispose_bracket_handler(
             &destructor.local_vars,
             &destructor.in_vars,
             &destructor.out_vars,
-            None,
+            all_outs,
         )?;
     }
 
@@ -231,6 +233,7 @@ pub fn dispose_bracket_handler(
             &bracket_handler.local_variables,
             output_handler.max_variadic_outputs.get().unwrap_or(0)
                 + output_handler.child_variadic_outputs.get().unwrap_or(0),
+            all_outs,
         )?;
     } else {
         write_fragment(
@@ -238,7 +241,7 @@ pub fn dispose_bracket_handler(
             bracket_handler.brackent_end_fragment,
             stack,
             &bracket_handler.local_variables,
-            None,
+            all_outs,
         )?;
     }
 

@@ -70,7 +70,7 @@ impl LexerValue {
 
                 (number_popped, num_pushed)
             }
-            LexerValue::Literal(literal) => (0, 1),
+            LexerValue::Literal(_literal) => (0, 1),
         }
     }
 }

@@ -557,7 +557,7 @@ pub const BUILTINS: &'static [Builtin] = &[
             BracketHandler {
                 output_handler: Some(OutputHandler {
                     fragment: half_fragment!("
-                        yield ({value:in});
+                        yield [{value:in}];
                         yield* {inner:local}({value:in});
                     "),
                     behavior: MultiOutputBehavior::Variadic
@@ -567,7 +567,7 @@ pub const BUILTINS: &'static [Builtin] = &[
                         //
                     }}
 
-                    for ({value:out} of {inner:local}({all_ins})) {{
+                    for ([{value:out}] of {inner:local}({all_ins})) {{
                         {inner}
                     }}
                 ")

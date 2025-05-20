@@ -136,9 +136,10 @@ impl Stack {
         );
 
         if out.len() < n {
-            let index = self.frames.len() - 1;
+            let mut index = self.frames.len();
 
             while out.len() < n {
+                index -= 1;
                 let frame = &self.frames[index];
 
                 out.extend_from_slice(

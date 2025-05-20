@@ -70,7 +70,7 @@ impl Builtin {
         next: &mut impl Iterator<Item = impl Deref<Target = LexerValue>>,
     ) -> usize {
         let mut max = 0;
-        for bracket_handler in self.bracket_handlers {
+        for _bracket_handler in self.bracket_handlers {
             let value = next.next().unwrap();
             let (_, v) = value.get_stack_movement(next);
 

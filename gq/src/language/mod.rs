@@ -62,7 +62,12 @@ fn parse_single_command(
             }
             for _ in builtin.bracket_handlers.iter() {
                 parse_single_command(iter, stack, output)?;
-                fragment::dispose_bracket_handler(output, stack.pop_group(), stack)?;
+                fragment::dispose_bracket_handler(
+                    output,
+                    stack.pop_group(),
+                    stack,
+                    all_outs.as_ref(),
+                )?;
             }
 
             Ok(())
@@ -80,10 +85,19 @@ fn parse_single_command(
 
             Ok(())
         }
-        LexerValue::Literal(literal) => Ok(stack.current_group.stack.push(match literal {
-            lexer::Literal::Integer(e) => format!("{}", e),
-            lexer::Literal::String(k) => serde_json::to_string(&k).unwrap(),
-        })),
+        LexerValue::Literal(literal) => {
+            let var_name = stack.push();
+            output.write(template_types::Output::String(&format!(
+                "const {var_name} = {};",
+                match literal {
+                    lexer::Literal::Integer(e) => format!("{}", e),
+                    lexer::Literal::String(k) => serde_json::to_string(&k).unwrap(),
+                }
+            )))?;
+            output.write(template_types::Output::NewLine)?;
+
+            Ok(())
+        }
     }
 }
 
@@ -105,9 +119,9 @@ pub fn transpile_program(
     }
 
     while stack.has_group() {
-        dispose_bracket_handler(&mut output, stack.pop_group(), &mut stack)?;
+        dispose_bracket_handler(&mut output, stack.pop_group(), &mut stack, None)?;
     }
-    dispose_bracket_handler(&mut output, stack.current_group.clone(), &mut stack)?;
+    dispose_bracket_handler(&mut output, stack.current_group.clone(), &mut stack, None)?;
 
     output.write(template_types::Output::Dedent)?;
     output.write(template_types::Output::NewLine)?;

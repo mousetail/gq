@@ -104,6 +104,7 @@ fn write_output_handler(
             TemplateToken::LocalVar(n) => {
                 output.write(Output::String(local_vars.get(*n).unwrap().as_str()))?
             }
+            TemplateToken::AllIns => todo!(),
         }
     }
 
@@ -258,6 +259,7 @@ pub fn write_tokens(
             TemplateToken::LocalVar(n) => {
                 output.write(Output::String(local_vars.get(n).unwrap().as_str()))?
             }
+            TemplateToken::AllIns => todo!(),
         }
     }
 

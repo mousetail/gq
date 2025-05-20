@@ -10,7 +10,7 @@
 | h | H | \( |
 | i Array Index | I Generator Index | \) |
 | j | J | \* times |
-| k | K Knot | \+ plus |
+| k | K | \+ plus |
 | l | L | \, comma |
 | m Multiple | M Modify | \- sub |
 | n | N | \. |

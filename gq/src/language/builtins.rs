@@ -545,37 +545,35 @@ pub const BUILTINS: &'static [Builtin] = &[
             },
         ]
     },
-    Builtin {
-        name: "Knot",
-        description: "Repeats a generator forever, producing each intermediate value",
-        token: 'K',
-        template: fragment!("
-            const {initial_value:local} = {value:in};
+    // Builtin {
+    //     name: "Knot",
+    //     description: "Repeats a generator forever, producing each intermediate value",
+    //     token: 'K',
+    //     template: fragment!("
+    //         let {inner:local} = function* ({all_ins}) {{
+    //             {inner}
+    //     "),
+    //     bracket_handlers: &[
+    //         BracketHandler {
+    //             output_handler: Some(OutputHandler {
+    //                 fragment: half_fragment!("
+    //                     yield ({value:in});
+    //                     yield* {inner:local}({value:in});
+    //                 "),
+    //                 behavior: MultiOutputBehavior::Variadic
+    //             }),
+    //             flags: BracketContextFlags::new(),
+    //             fragment: fragment!("
+    //                     //
+    //                 }}
 
-            let {inner:local} = function* ({value:out}) {{
-                {inner}
-        "),
-        bracket_handlers: &[
-            BracketHandler {
-                output_handler: Some(OutputHandler {
-                    fragment: half_fragment!("
-                        yield ({value:in});
-                        yield* {inner:local}({value:in});
-                    "),
-                    behavior: MultiOutputBehavior::Variadic
-                }),
-                flags: BracketContextFlags::new(),
-                fragment: fragment!("
-                        //
-                    }}
-
-                    for ({value:out} of {inner:local}({initial_value:local})) {{
-                        {inner}
-                    }}
-                ")
-            },
-        ]
-    },
+    //                 for ({value:out} of {inner:local}({all_ins})) {{
+    //                     {inner}
+    //                 }}
+    //             ")
+    //         },
+    //     ]
+    // },
     Builtin {
         name: "Store",
         description: "Temporairly pops a value from the stack, and pushes it again at the end",

@@ -52,6 +52,14 @@ impl Builtin {
                 .flat_map(|handler| handler.get_local_var_names()),
         )
     }
+
+    pub fn uses_all_ins(&self) -> bool {
+        self.template.uses_all_ins()
+            || self
+                .bracket_handlers
+                .iter()
+                .any(|e| e.fragment.uses_all_ins())
+    }
 }
 
 #[derive(Copy, Clone, Debug)]

@@ -22,6 +22,7 @@ pub enum TemplateToken<'a> {
     InVar(usize),
     OutVar(usize),
     String(Output<'a>),
+    AllIns,
     LocalVar(&'a str),
 }
 
@@ -68,6 +69,7 @@ impl<'a> ToTokens for TemplateToken<'a> {
             TemplateToken::OutVar(a) => ("OutVar", quote! {(#a)}),
             TemplateToken::String(a) => ("String", quote! {(#a)}),
             TemplateToken::LocalVar(a) => ("LocalVar", quote! {(#a)}),
+            TemplateToken::AllIns => ("AllIns", quote! {}),
         };
 
         let name_ident = format_ident!("{name}");
@@ -91,6 +93,10 @@ impl<'a> ProgramFragment<'a> {
         self.init_tokens
             .get_local_var_names()
             .chain(self.destruct_tokens.get_local_var_names())
+    }
+
+    pub fn uses_all_ins(&self) -> bool {
+        self.init_tokens.uses_all_ins() || self.destruct_tokens.uses_all_ins()
     }
 }
 
@@ -124,6 +130,7 @@ pub trait HighestVarNumbers<'a> {
     #[allow(unused)]
     fn get_number_of_output_vars(&self) -> usize;
     fn get_local_var_names(&self) -> impl Iterator<Item = &'a str>;
+    fn uses_all_ins(&self) -> bool;
 }
 
 impl<'a> HighestVarNumbers<'a> for [TemplateToken<'a>] {
@@ -151,5 +158,9 @@ impl<'a> HighestVarNumbers<'a> for [TemplateToken<'a>] {
 
     fn get_local_var_names(&self) -> impl Iterator<Item = &'a str> {
         self.into_iter().flat_map(|d| d.get_local_var_names())
+    }
+
+    fn uses_all_ins(&self) -> bool {
+        self.into_iter().any(|k| matches!(k, TemplateToken::AllIns))
     }
 }

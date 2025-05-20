@@ -129,6 +129,7 @@ fn half_parse<'a>(
 
                 match parts.as_slice() {
                     ["inner"] => return tokens,
+                    ["all_ins"] => tokens.push(TemplateToken::AllIns),
                     [name, "in"] => tokens.push(TemplateToken::InVar(variables.lookup_in(&name))),
                     [name, "out"] => {
                         tokens.push(TemplateToken::OutVar(variables.lookup_out(&name)))

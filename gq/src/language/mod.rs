@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs::OpenOptions, io::Write, iter::Peekable};
 use builtin::Builtin;
 use builtins::BUILTINS;
 use fragment::{dispose_bracket_handler, write_comma};
-use lexer::{LexerValue, parse};
+use lexer::{LexerValue, StackMovement, parse};
 use stack::Stack;
 
 mod builtin;
@@ -21,7 +21,15 @@ fn parse_single_command(
     stack: &mut Stack,
     output: &mut OutputWriter<impl Write>,
 ) -> std::io::Result<()> {
-    match iter.next().unwrap() {
+    let v = iter.next().unwrap();
+    let StackMovement { pops, pushes } =
+        v.get_stack_movement(&mut iter.clone().map(|e| Box::new(e)));
+    output.write(template_types::Output::String(&format!(
+        "// pops={pops} pushes={pushes}"
+    )))?;
+    output.write(template_types::Output::NewLine)?;
+
+    match v {
         LexerValue::Builtin(builtin) => {
             let local_vars: HashMap<_, _> = builtin
                 .get_local_var_names()

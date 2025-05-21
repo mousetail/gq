@@ -1,7 +1,13 @@
 use crate::language::{Builtin, builtins::BUILTINS};
-use std::{iter::Peekable, ops::Deref};
+use std::{fmt::Debug, iter::Peekable, ops::Deref};
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug)]
+pub struct StackMovement {
+    pub pops: usize,
+    pub pushes: usize,
+}
+
+#[derive(Clone, Debug)]
 pub enum Literal {
     Integer(u32),
     String(String),
@@ -15,19 +21,43 @@ pub enum LexerValue {
     Literal(Literal),
 }
 
+impl Debug for LexerValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Builtin(arg0) => f.debug_tuple("Builtin").field(&arg0.name).finish(),
+            Self::Comma => write!(f, "Comma"),
+            Self::Group(arg0) => f.debug_tuple("Group").field(arg0).finish(),
+            Self::Literal(arg0) => f.debug_tuple("Literal").field(arg0).finish(),
+        }
+    }
+}
+
 impl LexerValue {
     pub fn get_stack_movement<'a>(
         &self,
         next: &mut impl Iterator<Item = impl Deref<Target = LexerValue>>,
-    ) -> (usize, usize) {
+    ) -> StackMovement {
         match self {
             LexerValue::Builtin(builtin) => {
-                let mut number_popped = builtin.template.arguments_popped;
-                let mut number_pushed = builtin.template.arguments_pushed;
+                let mut stack_movement = StackMovement {
+                    pops: builtin.template.arguments_popped,
+                    pushes: builtin.template.arguments_pushed,
+                };
 
                 for bracket_handler in builtin.bracket_handlers {
-                    let (group_addition, group_subtraction) =
-                        next.next().unwrap().get_stack_movement(next);
+                    println!(
+                        "{} handler {} popped={stack_movement:?} {} {}",
+                        builtin.name,
+                        builtin.bracket_handlers.len(),
+                        bracket_handler.fragment.arguments_popped,
+                        bracket_handler.fragment.arguments_pushed
+                    );
+
+                    let next_builtin = next
+                        .next()
+                        .expect(&format!("End of stack reached with {}", builtin.name));
+                    println!("{:?}", next_builtin.deref());
+                    let next_stack_movement = next_builtin.get_stack_movement(next);
                     match bracket_handler.output_handler.or_else(|| {
                         builtin
                             .bracket_handlers
@@ -36,41 +66,47 @@ impl LexerValue {
                             .and_then(|k| k.output_handler)
                     }) {
                         None if bracket_handler.flags.no_pop => (),
-                        None => number_popped += group_subtraction,
+                        None => stack_movement.pops += next_stack_movement.pops,
                         Some(l) => match l.behavior {
-                            super::builtin::MultiOutputBehavior::Variadic => {
-                                number_popped += group_subtraction;
-                                number_pushed += group_addition
+                            super::builtin::MultiOutputBehavior::Variadic
+                                if bracket_handler.flags.no_pop =>
+                            {
+                                stack_movement.pushes += next_stack_movement.pushes - 1
                             }
-                            _ => number_popped += group_subtraction,
+                            super::builtin::MultiOutputBehavior::Variadic => {
+                                stack_movement.pops += next_stack_movement.pops;
+                                stack_movement.pushes += next_stack_movement.pushes - 1
+                            }
+                            _ => stack_movement.pops += next_stack_movement.pops,
                         },
                     };
 
-                    number_popped -= bracket_handler.fragment.arguments_popped;
-                    number_popped += bracket_handler.fragment.arguments_pushed;
+                    stack_movement.pops -= bracket_handler.fragment.arguments_popped;
+                    stack_movement.pushes += bracket_handler.fragment.arguments_pushed;
                 }
 
-                (number_popped, number_pushed)
+                stack_movement
             }
-            LexerValue::Comma => (1, 0),
+            LexerValue::Comma => StackMovement { pops: 1, pushes: 0 },
             LexerValue::Group(lexer_values) => {
                 let mut iterator = lexer_values.iter();
 
-                let mut number_popped @ mut num_pushed = 0;
+                let mut stack_movement = StackMovement { pops: 0, pushes: 0 };
 
                 while let Some(value) = iterator.next() {
-                    let (subtraction, addition) = value.get_stack_movement(&mut iterator);
+                    let next_value_movement = value.get_stack_movement(&mut iterator);
 
-                    let original_num_pushed = num_pushed;
-                    num_pushed -= subtraction.min(original_num_pushed);
-                    number_popped += subtraction.saturating_sub(original_num_pushed);
+                    let original_num_pushed = stack_movement.pushes;
+                    stack_movement.pushes -= next_value_movement.pops.min(stack_movement.pushes);
+                    stack_movement.pops +=
+                        next_value_movement.pops.saturating_sub(original_num_pushed);
 
-                    num_pushed += addition;
+                    stack_movement.pushes += next_value_movement.pushes;
                 }
 
-                (number_popped, num_pushed)
+                stack_movement
             }
-            LexerValue::Literal(_literal) => (0, 1),
+            LexerValue::Literal(_literal) => StackMovement { pops: 0, pushes: 1 },
         }
     }
 }

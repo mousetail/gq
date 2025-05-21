@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use template_types::{HighestVarNumbers, ProgramFragment, TemplateToken};
 
-use super::lexer::LexerValue;
+use super::lexer::{LexerValue, StackMovement};
 
 #[derive(Debug, Clone, Copy)]
 pub enum MultiOutputBehavior {
@@ -72,9 +72,9 @@ impl Builtin {
         let mut max = 0;
         for _bracket_handler in self.bracket_handlers {
             let value = next.next().unwrap();
-            let (_, v) = value.get_stack_movement(next);
+            let StackMovement { pops, .. } = value.get_stack_movement(next);
 
-            max = max.max(v);
+            max = max.max(pops);
         }
 
         max
